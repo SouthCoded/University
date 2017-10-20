@@ -1,2 +1,2 @@
 # University
-Code for the university courses
+Code for UCL university first year courses
