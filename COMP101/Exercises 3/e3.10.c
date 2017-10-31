@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 
-char** numberfy(int a){
+char* numberfy(int a){
 	
 	static char one[5][6] = {
 	{' ',' ',' ','*',' ',' '},
@@ -78,16 +78,16 @@ char** numberfy(int a){
 	};
 
 	switch(a){
-		case 0: return **zero;
-		case 1: return one;
-		case 2: return two;
-		case 3: return three;
-		case 4: return four;
-		case 5: return five;
-		case 6: return six;
-		case 7: return seven;
-		case 8: return eight;
-		case 9: return nine;
+		case 0: return *zero;
+		case 1: return *one;
+		case 2: return *two;
+		case 3: return *three;
+		case 4: return *four;
+		case 5: return *five;
+		case 6: return *six;
+		case 7: return *seven;
+		case 8: return *eight;
+		case 9: return *nine;
 	}
 }
 
@@ -106,7 +106,7 @@ int main(void){
 
 	scanf("%i,%i,%i", &first,&second,&third); 
 
-	char** a = numberfy(first);
+	char (*zero)[6] = numberfy(first);
 
 
 	//first digit
