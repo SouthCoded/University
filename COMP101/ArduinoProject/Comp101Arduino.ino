@@ -1,3 +1,4 @@
+#include <math.h>
 int ThermistorPin = 0;
 int voltageOutput;
 float fixedResistor = 10000;
@@ -27,4 +28,5 @@ void loop() {
 
   delay(500);
 }
+
 
