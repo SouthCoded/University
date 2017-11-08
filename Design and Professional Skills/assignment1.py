@@ -33,12 +33,12 @@ def estimate_pi(p):
 			raise ValueError()
 	
 	except ValueError:
-		print "Must be an integer"
+		print ("Must be an integer")
 	
 	else:
 
 		if p > 7:
-			print "I Wouldn't pick a number that high unless you want to wait a while"
+			print ("I Wouldn't pick a number that high unless you want to wait a while")
 		else:
 			for m in range(p*5):
 				
@@ -56,7 +56,7 @@ def estimate_pi(p):
 
 			best_estimate = "%0.*f" % (p, best_estimate)
 
-			print best_estimate
+			print (best_estimate)
 
 
 #estimate_pi(8)
@@ -113,7 +113,7 @@ def calculate(e):
 	if len(l) > 1:
 		calculate(l)
 	else: 
-		print l[0]
+		print (l[0])
 
 def calculator(exp):
 
@@ -131,13 +131,13 @@ def calculator(exp):
 	   		if expression[x] not in terms:
 	   			raise ValueError
 
-	   	#Checks for negative numbers
-	   	for x in range(len(expression)-1):
-	   		if expression[x] == "-":
-	   			if expression[x+1] in numbers:
-	   				raise ValueError
+		#Checks for negative numbers
+		for x in range(len(expression)-1):
+			if expression[x] == "-":
+				if expression[x+1] in numbers:
+					raise ValueError
 
-	   	l = []
+		l = []
 		for x in range(len(expression)):
 			if expression[x] not in numbers:
 				l.append(expression[x])
@@ -156,7 +156,7 @@ def calculator(exp):
 
 		expression = l
 			
-	   	for p in range(len(expression)):
+		for p in range(len(expression)):
 			
 			if expression[p] == "(":
 				parantheses.append(1)
@@ -175,7 +175,7 @@ def calculator(exp):
 			raise ans
 		
 	except ValueError:
-		print "Invalid Characters"
+		print ("Invalid Characters")
 
 	else:
 		calculate(expression)
