@@ -1,5 +1,5 @@
 #include <math.h>
-int ThermistorPin = 0;
+int thermistorPin = 0;
 int voltageOutput;
 float fixedResistor = 10000;
 float logR2, R2, T;
@@ -44,7 +44,7 @@ song();
 
 void loop() {
 
-  voltageOutput = analogRead(ThermistorPin)-200;
+  voltageOutput = analogRead(thermistorPin)-200;
   R2 = fixedResistor * (1023.0 / (float)voltageOutput - 1.0);
   logR2 = log(R2);
   float K = (1.0 / (c1 + c2*logR2 + c3*logR2*logR2*logR2)); // Steinhart and Hart Equation. T  = 1 / {A + B[ln(R)] + C[ln(R)]^3}
