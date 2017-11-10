@@ -1,10 +1,15 @@
+//Code for Comp101 Arduino Project
+//Duncan, 4/11/17
+
 #include <math.h>
+//Variables for calculating temperature
 int thermistorPin = 0;
 int voltageOutput;
 float fixedResistor = 10000;
-float logR2, R2, T;
+float logRestistor2, resistor2, T;
 float c1 = 1.009249522e-03, c2 = 2.378405444e-04, c3 = 2.019202697e-07;
 
+//Setting variables for the buttons
 int firstButtonInput = 2;
 int firstLight = 3;
 int firstButtonState = 0;
@@ -17,9 +22,11 @@ int thirdButtonInput = 12;
 int thirdLight = 13;
 int thirdButtonState = 0;
 
+//Variable for the lights
 int lit = 0;
 
-int buzzer = 10;
+//Variable for the speaker
+int speaker = 10;
 
 void setup() {
 Serial.begin(9600);
@@ -36,20 +43,19 @@ pinMode(thirdLight, OUTPUT);
 pinMode(thirdButtonInput, INPUT);
 digitalWrite(thirdButtonInput, HIGH);
  
-pinMode(buzzer, OUTPUT);
-
-song();
+pinMode(speaker, OUTPUT);
 
 }
 
 void loop() {
 
+  //Calculating temperature from the thermistor
   voltageOutput = analogRead(thermistorPin)-200;
-  R2 = fixedResistor * (1023.0 / (float)voltageOutput - 1.0);
-  logR2 = log(R2);
-  float K = (1.0 / (c1 + c2*logR2 + c3*logR2*logR2*logR2)); // Steinhart and Hart Equation. T  = 1 / {A + B[ln(R)] + C[ln(R)]^3}
+  resistor2 = fixedResistor * (1023.0 / (float)voltageOutput - 1.0);
+  logRestistor2 = log(resistor2);
+  float K = (1.0 / (c1 + c2*logRestistor2 + c3*logRestistor2*logRestistor2*logRestistor2)); // Steinhart and Hart Equation. T  = 1 / {A + B[ln(R)] + C[ln(R)]^3}
 
-
+  //Reading input from buttons and setting the appropriate lights
   firstButtonState = digitalRead(firstButtonInput);
   if (firstButtonState == LOW) {
       digitalWrite(firstLight, HIGH);
@@ -74,6 +80,12 @@ void loop() {
       lit = 3;
   }
 
+  //Speaker only plays Jingle Bells if it is below freezing
+  if (K < 273.15){
+      song();
+
+  }
+
   Serial.println(K);
   delay(1500);
   Serial.println(lit);
@@ -85,36 +97,29 @@ void loop() {
 void song(){
   
   int length = 26;
-  char notes[] = "eeeeeeegcde fffffeeeeddedg";
-  int beats[] = { 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2};
+  char note[] = "eeeeeeegcde fffffeeeeddedg";    //Overall sheet music for jingle bells
+  int beat[] = { 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2}; //How long each note should play for
   int tempo = 300;
   
-   for (int i = 0; i < length; i++) {
-    if (notes[i] == ' ') {
-      delay(beats[i] * tempo); // rest
+  for (int i = 0; i < length; i++) {
+    if (note[i] == ' ') {
+      delay(beat[i] * tempo); // rest
     }
     else {
-      char names[] = { 'c', 'd', 'e', 'f', 'g'};
-     int tones[] = { 1915, 1700, 1519, 1432, 1275};
-
-      for (int t = 0; t < 5; t++) {
-        if (names[t] == notes[i]) {
-           for (long p = 0; p < (beats[i] * tempo * 1000L); p += tones[t] * 2) {
-            digitalWrite(buzzer, HIGH);
-            delayMicroseconds(tones[t]);
-            digitalWrite(buzzer, LOW);
-            delayMicroseconds(tones[t]);
-          }
+     char name[] = { 'c', 'd', 'e', 'f', 'g'};
+     int tone[] = { 1915, 1700, 1519, 1432, 1275};
+     
+     for (int t = 0; t < 5; t++) {
+        if (name[t] == note[i]) { 
+           for (long p = 0; p < (beat[i] * tempo * 1000L); p += tone[t] * 2) {  //For loop is necessary as turning the speaker off and on is one click and you want a continous sound
+             digitalWrite(speaker, HIGH);
+             delayMicroseconds(tone[t]);
+             digitalWrite(speaker, LOW);
+             delayMicroseconds(tone[t]);
+           }
         }
-      }
-   } 
-    // pause between notes
-    delay(tempo / 2); 
+     }
+    } 
+    delay(tempo / 2);  // pause between notes
   }
 } 
-
-
-
-
-
-
