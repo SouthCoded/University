@@ -1,5 +1,5 @@
 //Code for Comp101 Arduino Project
-//Duncan, 4/11/17
+//Duncan Rowe, 4/11/17
 
 #include <math.h>
 //Variables for calculating temperature
@@ -23,7 +23,7 @@ int thirdLight = 13;
 int thirdButtonState = 0;
 
 //Variable for the lights
-int lit = 0;
+int lightOn = 0;
 
 //Variable for the speaker
 int speaker = 10;
@@ -53,7 +53,7 @@ void loop() {
   voltageOutput = analogRead(thermistorPin)-200;
   resistor2 = fixedResistor * (1023.0 / (float)voltageOutput - 1.0);
   logRestistor2 = log(resistor2);
-  float K = (1.0 / (c1 + c2*logRestistor2 + c3*logRestistor2*logRestistor2*logRestistor2)); // Steinhart and Hart Equation. T  = 1 / {A + B[ln(R)] + C[ln(R)]^3}
+  float kelvin = (1.0 / (c1 + c2*logRestistor2 + c3*logRestistor2*logRestistor2*logRestistor2)); // Steinhart and Hart Equation. T  = 1 / {A + B[ln(R)] + C[ln(R)]^3}
 
   //Reading input from buttons and setting the appropriate lights
   firstButtonState = digitalRead(firstButtonInput);
@@ -61,7 +61,7 @@ void loop() {
       digitalWrite(firstLight, HIGH);
       digitalWrite(secondLight, LOW);
       digitalWrite(thirdLight, LOW);   
-      lit = 1;   
+      lightOn = 1;   
   }
 
   secondButtonState = digitalRead(secondButtonInput);
@@ -69,7 +69,7 @@ void loop() {
       digitalWrite(secondLight, HIGH);
       digitalWrite(firstLight, LOW);
       digitalWrite(thirdLight, LOW); 
-      lit = 2; 
+      lightOn = 2; 
   }
 
   thirdButtonState = digitalRead(thirdButtonInput);
@@ -77,18 +77,18 @@ void loop() {
       digitalWrite(thirdLight, HIGH);
       digitalWrite(firstLight, LOW);  
       digitalWrite(secondLight, LOW);
-      lit = 3;
+      lightOn = 3;
   }
 
   //Speaker only plays Jingle Bells if it is below freezing
-  if (K < 273.15){
+  if (kelvin < 273.15){
       song();
 
   }
 
-  Serial.println(K);
+  Serial.println(kelvin);
   delay(1500);
-  Serial.println(lit);
+  Serial.println(lightOn);
 
   delay(1500);
 
@@ -123,3 +123,5 @@ void song(){
     delay(tempo / 2);  // pause between notes
   }
 } 
+
+
