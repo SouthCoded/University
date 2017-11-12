@@ -2,7 +2,7 @@
 //Duncan Rowe, 4/11/17
 
 #include <math.h>
-//Variables for calculating temperature
+//Variables for calculating temperature, taken inspiration from http://www.circuitbasics.com/arduino-thermistor-temperature-sensor-tutorial/
 int thermistorPin = 0;
 int voltageOutput;
 float fixedResistor = 10000;
@@ -49,7 +49,7 @@ pinMode(speaker, OUTPUT);
 
 void loop() {
 
-  //Calculating temperature from the thermistor
+  //Calculating temperature from the thermistor, taken inspiration from http://www.circuitbasics.com/arduino-thermistor-temperature-sensor-tutorial/
   voltageOutput = analogRead(thermistorPin)-200;
   resistor2 = fixedResistor * (1023.0 / (float)voltageOutput - 1.0);
   logRestistor2 = log(resistor2);
