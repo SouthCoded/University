@@ -73,6 +73,8 @@ void draw(){
 void drawGraph() {
   background(0);
 
+  //These two for loops took inspiration from : https://forum.processing.org/two/discussion/3949/real-time-graph-plotting
+  
   //Draws Vertical Grid Lines
   for (int i = 0; i <= width; i += 50) {
     fill(0, 255, 0);
