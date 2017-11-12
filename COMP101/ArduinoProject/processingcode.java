@@ -102,7 +102,7 @@ void updateText(String temperature){
   rect(600, 50, 175, 50);
    
   //Draws the text 
-  fill(0, 255, 0);
+  fill(0, 0, 0);
   textSize(20);
   text(temperature, 615, 82);
   
