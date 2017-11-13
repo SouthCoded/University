@@ -61,6 +61,106 @@ def estimate_pi(p):
 
 #estimate_pi(8)
 
+def alphabetFrequency(x):
+    return {
+        'a': 0,
+        'b': 1,
+        'c': 2,
+        'd': 3,
+        'e': 4,
+        'f': 5,
+        'g': 6,
+        'h': 7,
+        'i': 8,
+        'j': 9,
+        'k': 10,
+        'l': 11,
+        'm': 12,
+        'n': 13,
+        'o': 14,
+        'p': 15,
+        'q': 16,
+        'r': 17,
+        's': 18,
+        't': 19,
+        'u': 20,
+        'v': 21,
+        'w': 22,
+        'x': 23,
+        'y': 24,
+        'z': 25,
+    }[x]
+
+def letterReplacement(x):
+    
+    return {
+        0: 'e',
+        1: 't',
+        2: 'a',
+        3: 'o',
+        4: 'i',
+        5: 'n',
+        6: 's',
+        7: 'h',
+        8: 'r',
+        9: 'd',
+        10: 'l',
+        11: 'u', 
+        12: 'c',
+		13: 'm',
+		14: 'w',
+		15: 'f',
+		16: 'y',
+		17: 'g', 
+		18: 'p',
+		19: 'b',
+		20: 'v',
+		21: 'k',
+		22: 'x',
+		23: 'j',
+		24: 'q',
+		25: 'z'
+    }[x]
+
+def break_cipher(text):
+
+	text = text.lower()
+	text = list(text)
+	total = len(text)
+
+	textFrequency = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+	letterList = ["","","","","","","","","","","","","","","","","","","","","","","","","",""]
+
+	for x in text:
+		position = alphabetFrequency(x)
+		textFrequency[position] += 1
+
+	for x in range(len(textFrequency)):
+		textFrequency[x] = textFrequency[x]/total
+
+	sortedTextFrequency = sorted(textFrequency, reverse=True)
+
+	for x in range(len(textFrequency)):
+		for y in range(len(sortedTextFrequency)):
+			if textFrequency[x] == sortedTextFrequency[y]:
+				letter = letterReplacement(y)
+				letterList[x] = letter
+
+	for x in range(len(text)):
+		position = alphabetFrequency(text[x])
+		text[x] = letterList[position]
+
+	text = " ".join(str(x) for x in text)
+
+	print(text)
+
+break_cipher("LIVITCSWPIYVEWHEVSRIQMXLEYVEOIEWHRXEXIPFEMVEWHKVSTYLXZIXLIKIIXPIJVSZEYPERRGERIMWQLMGLMXQERIWGPSRIHMXQEREKIETXMJTPRGEVEKEITREWHEXXLEXXMZITWAWSQWXSWEXTVEPMRXRSJGSTVRIEYVIEXCVMUIMWERGMIWXMJMGCSMWXSJOMIQXLIVIQIVIXQSVSTWHKPEGARCSXRWIEVSWIIBXVIZMXFSJXLIKEGAEWHEPSWYSWIWIEVXLISXLIVXLIRGEPIRQIVIIBGIIHMWYPFLEVHEWHYPSRRFQMXLEPPXLIECCIEVEWGISJKTVWMRLIHYSPHXLIQIMYLXSJXLIMWRIGXQEROIVFVIZEVAEKPIEWHXEAMWYEPPXLMWYRMWXSGSWRMHIVEXMSWMGSTPHLEVHPFKPEZINTCMXIVJSVLMRSCMWMSWVIRCIGXMWYMX")
+
+
+
+
+
+
 parantheses = []
 
 def formatter(p):
@@ -181,7 +281,7 @@ def calculator(exp):
 		calculate(expression)
 
 
-calculator("((100+4)+(52*4))")
+#calculator("((100+4)+(52*4))")
 
 
 
