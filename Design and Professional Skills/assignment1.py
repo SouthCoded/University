@@ -391,7 +391,7 @@ def calculator(exp):
 
 		expression = tempList
 		
-		#Goes through the expression to simplfy it into numbers for error checking
+		#Goes through the expression to simplfy it into numbers for error checking, the numbers represent the classification of the object
 		for p in range(len(expression)):
 			
 			if expression[p] == "(":
