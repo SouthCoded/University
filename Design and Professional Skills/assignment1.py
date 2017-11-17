@@ -142,19 +142,19 @@ def lettersInFrequencyOrder(x):
         10: 'l',
         11: 'u', 
         12: 'c',
-		13: 'm',
-		14: 'w', 
-		15: 'f', 
-		16: 'y', 
-		17: 'g', 
-		18: 'p',
-		19: 'b',
-		20: 'v', 
-		21: 'k',
-		22: 'x',
-		23: 'j',
-		24: 'q',
-		25: 'z'
+	13: 'm',
+	14: 'w', 
+	15: 'f', 
+	16: 'y', 
+	17: 'g', 
+	18: 'p',
+	19: 'b',
+	20: 'v', 
+	21: 'k',
+	22: 'x',
+	23: 'j',
+	24: 'q',
+	25: 'z'
     }[x]
 
 def break_cipher(text):
@@ -174,7 +174,6 @@ def break_cipher(text):
 
 		textFrequency = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 		letterList = ["","","","","","","","","","","","","","","","","","","","","","","","","",""]
-		compareList = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"]
 
 		threeLetterWords = {}
 
@@ -392,7 +391,7 @@ def calculator(exp):
 
 		expression = tempList
 		
-		#Goes through the expression to simplfy it into numbers for error checking
+		#Goes through the expression to simplfy it into numbers for error checking, the numbers represent the classification of the object
 		for p in range(len(expression)):
 			
 			if expression[p] == "(":
