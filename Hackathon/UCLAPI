@@ -1,0 +1,183 @@
+import requests
+import random
+import json
+
+
+class C:
+    def __init__(self):
+        params = {
+            "token": "uclapi-26310163e6a3ab-3f22487f7a0734-e6beaa88dbfb85-21490425ffacb2"
+        }
+        r = requests.get("https://uclapi.com/roombookings/rooms", params=params)
+
+        x = r.json()  # x is a dict object
+
+        self.roomname = []  # 370
+        self.capacity = []
+        self.sitename = []
+        self.classification = []
+
+        sentSiteStart = ["I want a room near ", "Can you get me a room near ", "Please get a room around ",
+                         "Do you have a room near ", "Is a room available near "]
+        sentRoomStart = ["I need ", "I would like ", "Please get me ", "Can I get ", "I want "]
+        sentCapStart = ["I need a room that can hold ", "I want it to hold ", "Do you have a room that can fit ",
+                        "Get a room that can hold ", "I need a capcity of "]
+        sentClassStart = ["I want a ", "Get me a ", "I need a ", "Do you have a ", "I would like a "]
+
+        self.sentStart = [sentClassStart, sentCapStart, sentSiteStart, sentRoomStart]
+
+        sentSiteEnd = [" preferrably near ", " around the area of ", " close to", " not far from ", " next to "]
+        sentRoomEnd = [" using the room ", " that uses the room ", " please use ", " in the room ", " in "]
+        sentCapEnd = [" with a capacity of ", " that can hold ", " that can fit ", " that can contain ",
+                      " that has room for "]
+        sentClassEnd = [" that is a ", " with the type of ", " preferrably a ", " that is a  ", " that is a "]
+
+        self.sentEnd = [sentClassEnd, sentCapEnd, sentSiteEnd, sentRoomEnd]
+
+        for p in x.get("rooms"):  # p is your objects in the list
+            self.roomname.append(p.get("roomname"))
+            self.capacity.append(p.get("capacity"))
+            self.sitename.append(p.get("sitename"))
+            self.classification.append(p.get("classification"))
+
+    def sentenceBuilder(self):
+        roomRand = random.randint(0, len(self.roomname) - 1)
+        siteRand = random.randint(0, len(self.sitename) - 1)
+        capRand = random.randint(0, len(self.capacity) - 1)
+        classRand = random.randint(0, len(self.classification) - 1)
+        startRand = random.randint(0, 2)
+        endRand = random.randint(0, 3)
+        listRandStart = random.randint(0, 4)
+        listRandEnd = random.randint(0, 4)
+
+        roomAct = self.roomname[roomRand]
+        siteAct = self.sitename[siteRand]
+        capAct = self.capacity[capRand]
+        classAct = self.classification[classRand]
+
+        if classAct == "CR":
+            classAct = "classroom"
+        elif classAct == "LT":
+            classAct = "lecture theater"
+        elif classAct == "SS":
+            classAct = "social space"
+        elif classAct == "PC1":
+            classAct = "public cluster"
+        elif classAct == "CFE":
+            classAct = "cafe"
+        elif classAct == "TH":
+            classAct = "theater"
+
+        tempStart = self.sentStart[startRand]
+        tempEnd = self.sentEnd[endRand]
+
+        y = 0
+        arr = []
+        for x in tempStart[listRandStart].split():
+            arr.append("0")
+
+        if startRand == 0 and endRand == 1:
+            fullSentence = str(tempStart[listRandStart]) + classAct + str(tempEnd[listRandEnd]) + str(capAct)
+            for x in classAct.split():
+                arr.append("1")
+            for x in tempEnd[listRandEnd].split():
+                arr.append("0")
+            arr.append("1")
+        elif startRand == 0 and endRand == 2:
+            fullSentence = str(tempStart[listRandStart]) + classAct + str(tempEnd[listRandEnd]) + siteAct
+            for x in classAct.split():
+                arr.append("1")
+            for x in tempEnd[listRandEnd].split():
+                arr.append("0")
+            for x in siteAct.split():
+                arr.append("1")
+        elif startRand == 0:
+            fullSentence = str(tempStart[listRandStart]) + classAct
+            for x in classAct.split():
+                arr.append("1")
+
+        elif startRand == 1 and endRand == 0:
+            fullSentence = str(tempStart[listRandStart]) + str(capAct) + str(tempEnd[listRandEnd]) + classAct
+            arr.append("1")
+            for x in tempEnd[listRandEnd].split():
+                arr.append("0")
+            for x in classAct.split():
+                arr.append("1")
+        elif startRand == 1 and endRand == 2:
+            fullSentence = str(tempStart[listRandStart]) + str(capAct) + str(tempEnd[listRandEnd]) + siteAct
+            arr.append("1")
+            for x in tempEnd[listRandEnd].split():
+                arr.append("0")
+            for x in siteAct.split():
+                arr.append("1")
+        elif startRand == 1 and endRand == 3:
+            fullSentence = str(tempStart[listRandStart]) + str(capAct) + str(tempEnd[listRandEnd]) + roomAct
+            arr.append("1")
+            for x in tempEnd[listRandEnd].split():
+                arr.append("0")
+            for x in roomAct.split():
+                arr.append("1")
+        elif startRand == 1:
+            fullSentence = str(tempStart[listRandStart]) + str(capAct)
+            arr.append("1")
+
+        elif startRand == 2 and endRand == 0:
+            fullSentence = str(tempStart[listRandStart]) + siteAct + str(tempEnd[listRandEnd]) + classAct
+            for x in siteAct.split():
+                arr.append("1")
+            for x in tempEnd[listRandEnd].split():
+                arr.append("0")
+            for x in classAct.split():
+                arr.append("1")
+        elif startRand == 2 and endRand == 1:
+            fullSentence = str(tempStart[listRandStart]) + siteAct + str(tempEnd[listRandEnd]) + str(capAct)
+            for x in siteAct.split():
+                arr.append("1")
+            for x in tempEnd[listRandEnd].split():
+                arr.append("0")
+            arr.append("1")
+        elif startRand == 2:
+            fullSentence = str(tempStart[listRandStart]) + siteAct
+            for x in siteAct.split():
+                arr.append("1")
+
+
+        elif startRand == 3 and endRand == 1:
+            fullSentence = str(tempStart[listRandStart]) + roomAct + str(tempEnd[listRandEnd]) + str(capAct)
+            for x in roomAct.split():
+                arr.append("1")
+            for x in tempEnd[listRandEnd].split():
+                arr.append("0")
+            arr.append("1")
+        elif startRand == 3:
+            fullSentence = str(tempStart[0]) + roomAct
+            for x in roomAct.split():
+                arr.append("1")
+
+        while len(arr) < 30:
+            arr.append("0")
+
+        return fullSentence.lower(), arr
+        # print(arr)
+
+
+c = C()
+# print(c.sentenceBuilder()[0])
+# print(c.sentenceBuilder()[1])
+# f_arr, l_arr = [], []
+# for i in range(0, 10000):
+#     f, l = c.sentenceBuilder()
+#     f_arr.append(f)
+#     l_arr.append(l)
+#
+# with open('dataTrain.txt', 'w') as outfile:
+#     json.dump(dict(zip(f_arr, l_arr)), outfile)
+#
+# f_arr, l_arr = [], []
+# for i in range(0, 1000):
+#     f, l = c.sentenceBuilder()
+#     f_arr.append(f)
+#     l_arr.append(l)
+#
+# with open('dataTest.txt', 'w') as outfile:
+#     json.dump(dict(zip(f_arr, l_arr)), outfile)
