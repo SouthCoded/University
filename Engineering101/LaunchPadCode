@@ -2,8 +2,12 @@
 //Duncan Rowe, 24/11/17
 
 #include <math.h>
+
+
 //Variables for calculating temperature, taken inspiration from http://www.circuitbasics.com/arduino-thermistor-temperature-sensor-tutorial/
-int thermistorPin = A3;
+int thermistorPin = P1_3;
+
+
 int voltageOutput;
 float fixedResistor = 10000;
 float logRestistor2, resistor2, T;
@@ -16,14 +20,15 @@ Serial.begin(9600);
 }
 
 void loop() {
-
   //Calculating temperature from the thermistor, taken inspiration from http://www.circuitbasics.com/arduino-thermistor-temperature-sensor-tutorial/
-  voltageOutput = analogRead(thermistorPin)-200;
-  resistor2 = fixedResistor * (1023.0 / (float)voltageOutput - 1.0);
-  logRestistor2 = log(resistor2);
+  voltageOutput = analogRead(thermistorPin)-195;
+  Serial.println(voltageOutput);
+  //Serial.println(voltageOutput);
+  resistor2 = fixedResistor * (1023.0 / (float) voltageOutput - 1.0);
+  logRestistor2 = logf(resistor2);
   float kelvin = (1.0 / (c1 + c2*logRestistor2 + c3*logRestistor2*logRestistor2*logRestistor2)); // Steinhart and Hart Equation. T  = 1 / {A + B[ln(R)] + C[ln(R)]^3}
-  
   Serial.println(kelvin);
+  float F = ((9.0/5.0) * (kelvin - 273)) + 32;
+  Serial.println(F);
   delay(1500);
-
 }
