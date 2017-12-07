@@ -32,11 +32,9 @@ void loop() {
   Serial.println(celcius);
 
   int error = val - celcius - 1;
-  Serial.println(error);
   
   if (error > 0 ){
     int amount_heat = 20 * error;
-    Serial.println(amount_heat);
     analogWrite(heaterPin, amount_heat);
   }  
   else{
