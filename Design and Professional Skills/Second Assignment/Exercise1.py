@@ -1,7 +1,8 @@
 #Exercise 1 
-
 #        (w,v)                   (mx w)
 #thief([(2,50), (3,100), (5,140)], 17) = 550
+
+import pytest
 
 def thief(obj,max_weight):
 
@@ -23,14 +24,31 @@ def thief(obj,max_weight):
 		return weightArray[max_weight]
 	except TypeError:
 		return "Wrong Type"
+	except IndexError:
+		return "Weight should be positive"
 
-print(thief([(3,100),(5,140),(2,50)], 17))
+@pytest.mark.parametrize("test_inputs",[([], 100), ([], 10), ([], 20)])
+def test_thief_no_input(test_inputs):
+    obj, max_weight = test_inputs
+    assert thief(obj,max_weight) == 0
+
+@pytest.mark.parametrize("test_inputs",
+[([(2,50)], -17), ([(2,50), (1, 100), (1, 100)], -10), ([(2,50), (1, 100)], -1)])
+def test_thief_max_weight(test_inputs):
+    obj, max_weight = test_inputs
+    assert thief(obj, max_weight) == "Weight should be positive"
 
 def test_thief_example():
 	assert thief([(2,50), (3,100), (5,140)], 17) == 550
 
 def test_thief_zero():
 	assert thief([(2,50), (3,100), (5,140)], 17) > 0
+
+@pytest.mark.parametrize("test_inputs",[([(2,50), (3,100), (5,140)], "A"),([(2,50), (3,100), (5,140)], "6")])
+def test_thief_error(test_inputs):
+	ax, bx = test_inputs
+	print(thief(ax,bx))
+	assert thief(ax,bx) == "Wrong Type"
 
 		
 
