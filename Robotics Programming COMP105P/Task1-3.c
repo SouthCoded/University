@@ -33,7 +33,7 @@ void main() {
 				drive_goto(-25,-25); //Backwards
 				drive_goto(-17,17); //Turn left diagonal
 				drive_goto(25,25); //Travel half distance
-				right_turn();
+				drive_goto(34,-34); //Turn left diagonal
 				drive_goto(51,51); //Travel full distance
 
 				//Resets for next position
@@ -114,7 +114,7 @@ void main() {
 				drive_goto(17,-17); //Turn right diagonal
 				drive_goto(25,25); //Travel half distance
 				drive_goto(-25,-25); //Travels back
-				right_turn();
+				drive_goto(34,-34); 
 				drive_goto(25,25);
 
 				//Resets for next position
