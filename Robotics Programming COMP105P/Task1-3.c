@@ -26,18 +26,18 @@ void main() {
 		switch(input[x]){
 
 			case 'A':
-				drive_goto(-25,25); //Turn right diagonal
+				drive_goto(-25,25); //Turn left diagonal
 				drive_goto(25,25); //Travel half distance
 				drive_goto(25,-25); //Straightens
 				drive_goto(25,25);
 				drive_goto(-25,-25); //Backwards
-				drive_goto(-25,25); //Turn right diagonal
+				drive_goto(-25,25); //Turn left diagonal
 				drive_goto(25,25); //Travel half distance
-				left_turn();
+				right_turn();
 				drive_goto(51,51); //Travel full distance
 
 				//Resets for next position
-				drive_goto(25,-25); //Turn right diagonal
+				drive_goto(-25,25); //Turn left diagonal
 
 			case 'E':
 				drive_goto(25,25);
@@ -103,16 +103,16 @@ void main() {
 
 			case 'K':
 				left_turn();
-				drive_goto(50,50); //Turn right diagonal
-				drive_goto(-25,-25); //Turn right diagonal
-				drive_goto(-25,25); //Turn right diagonal
+				drive_goto(50,50); //Go forward
+				drive_goto(-25,-25); //Go backwards
+				drive_goto(25,-25); //Turn right diagonal
 				drive_goto(25,25); //Travel half distance
 				drive_goto(-25,-25); //Travels back
 				right_turn();
 				drive_goto(25,25);
 
 				//Resets for next position
-				drive_goto(25,-25); 
+				drive_goto(-25,25); 
 
 			case 'L':
 				left_turn();
