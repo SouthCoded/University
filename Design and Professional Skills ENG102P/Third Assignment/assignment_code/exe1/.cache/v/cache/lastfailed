@@ -1,0 +1,5 @@
+{
+  "client_test.py::TestClientClass::()::test_exchange_two_messages": true,
+  "client_test.py::TestClientClass::()::test_happy_path_one_message": true,
+  "client_test.py::TestClientClass::()::test_interleaved_messages": true
+}
