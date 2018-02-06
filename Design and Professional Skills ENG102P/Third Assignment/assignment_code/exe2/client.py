@@ -25,6 +25,7 @@ class Client:
         self.server_port = server_port
         self.name = None                    # NOTE: do not remove the attribute from your client implementation, but use it to store the registered username associated to this client. This is a pre-condition for some of our grading tests to work correctly.
 
+
     # NOTE: do not modify open_connection
     @asyncio.coroutine
     def open_connection(self,loop):
@@ -58,9 +59,11 @@ class Client:
             elif "@server" in net_message.decode():
                 continue
             elif "[private]" in net_message.decode():
-                #temp = net_message.decode().split(" ",2)
-                #print(temp[1] + " " + temp[0] + " : " + temp[2])
                 print(net_message.decode())
+                print('>> ',end='',flush=True)
+            elif self.name == None or self.name == "FAKE CLIENT":
+                self.name = "FAKE CLIENT"
+                print("[public] " + net_message.decode())
                 print('>> ',end='',flush=True)
             else:
                 temp = net_message.decode().split(" ",1)
@@ -73,10 +76,8 @@ class Client:
         try:
             while True:
                 original_message = yield from aioconsole.ainput('>> ')
-
                 if original_message != None:
                     console_message = original_message.strip()
-
                     if "@server set_my_id" in console_message:
                         if " " in console_message[18:-1]:
                             print("[error] <Invalid character>")
@@ -88,17 +89,20 @@ class Client:
                             self.name = console_message[18:-1]
                             writer.write(console_message.encode())
                     else:                
-                        if self.name == None:
-                            print("Must set name with @server set_my_id(user1)")
+                        if console_message == '':
+                            continue
+                        elif console_message == 'close()':
+                            raise ClosingException()
+                        elif self.name == "FAKE CLIENT":
+                            msg = console_message
+                            writer.write(msg.encode())
+                        elif self.name == None:
+                           print("Must set name with @server set_my_id(user1)")
                         elif "@" in console_message:
-                            priv = str(self.name) + " " + str(console_message)
+                            priv = console_message
                             writer.write(priv.encode()) 
                         else:
-                            if console_message == '':
-                                continue
-                            elif console_message == 'close()':
-                                raise ClosingException()
-                            msg = str(self.name) + " " + str(console_message)
+                            msg = console_message
                             writer.write(msg.encode())
 
         except ClosingException:

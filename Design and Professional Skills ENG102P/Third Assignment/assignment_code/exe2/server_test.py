@@ -76,6 +76,7 @@ class TestServerClass:
                                      fake_reader, self.fake_writer))
         assert len(self.fake_writer.getvalue()) == 0
         assert message.encode() in self.other_fake_writer.getvalue()
+
         assert self.fake_writer.get_extra_info('').encode() \
                                 in self.other_fake_writer.getvalue()
         expected_out_msg1 = 'Received {} from {}'.format(

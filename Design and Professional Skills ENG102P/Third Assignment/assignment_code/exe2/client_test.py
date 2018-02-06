@@ -93,10 +93,11 @@ class TestCorrectedClientClass:
         fake_reader = FakeReader(reader_messages)
         console_messages = []
         fake_console = FakeConsole(console_messages,output_pace=0.2)
+
         with mock.patch('aioconsole.ainput',side_effect=\
                 fake_console.fake_console_read) as mock_console:
-            self.loop.run_until_complete(self.testclient.\
-                use_connection(fake_reader, self.fake_writer))
+            self.loop.run_until_complete(self.testclient.use_connection(fake_reader, self.fake_writer))
+
         assert mock_console.call_count == len(console_messages) + 1
         out, err = capsys.readouterr()
         for message in console_messages:
@@ -112,8 +113,7 @@ class TestCorrectedClientClass:
         fake_console = FakeConsole(messages,output_pace=0.2)
         with mock.patch('aioconsole.ainput',side_effect=\
                 fake_console.fake_console_read) as mock_console:
-            self.loop.run_until_complete(self.testclient.\
-                use_connection(fake_reader, self.fake_writer))
+            self.loop.run_until_complete(self.testclient.use_connection(fake_reader, self.fake_writer))
         assert mock_console.call_count == len(messages) + 1
         out, err = capsys.readouterr()
         for message in messages:
@@ -197,3 +197,5 @@ class TestCorrectedClientClass:
         assert len(out) == 0
         assert '[Errno 111] Connect call failed' in err
 
+
+   

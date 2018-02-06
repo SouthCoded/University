@@ -20,7 +20,7 @@ class Server:
     def set_username(self,new_username,writer,old_username=None):
         self.address2name[writer.get_extra_info('peername')] = new_username
         self.new_username = new_username
-    
+
     # NOTE: this method must be implemented for some of our grading tests to work. If you don't implement this method correctly, you will lose some marks!
     # method that returns all the registered usernames as a list
     def get_registered_usernames_list(self):
@@ -32,7 +32,8 @@ class Server:
         self.all_clients.add(writer)
         client_addr = writer.get_extra_info('peername')
         print('New client {}'.format(client_addr))
-        
+        self.set_username("",writer)
+
         while True:
             data = yield from reader.read(100)
             if data == None or len(data) == 0:
@@ -43,7 +44,6 @@ class Server:
             if "@server" in message:
                 if "set_my_id" in message:
                     add2name = self.get_registered_usernames_list()
-                   
                     if message[18:-1] not in add2name.values():
                         self.set_username(message[18:-1],writer)
                         mes = "@client username set to " + str(message[18:-1])
@@ -56,21 +56,26 @@ class Server:
                     writer.write(mes.encode())
 
             for other_writer in self.all_clients:
+
                 if other_writer != writer:
-                    temp = message.split(" ",1) 
-                    if '@' == temp[1][:1]:
-                        temp = message.split(" ",2)
-                        desired_user = temp[1][1:]
-                        add2name = self.get_registered_usernames_list()
-                        for x in add2name.keys():
-                            if add2name[x] == desired_user:
-                                if x == other_writer.get_extra_info('peername'):
-                                    msg = "[private] " + temp[0] + " : " + temp[2]
-                                    other_writer.write(msg.encode())
-                                    yield from other_writer.drain()   
+
+                    name = self.address2name[writer.get_extra_info('peername')]
+
+                    if '@' in message:
+                        if "client" not in message:
+                            if "server" not in message:
+                                temp = message.split(" ",1)
+                                desired_user = temp[0][1:]
+                                add2name = self.get_registered_usernames_list()
+                                for x in add2name.keys():
+                                    if add2name[x] == desired_user:
+                                        if x == other_writer.get_extra_info('peername'):
+                                            msg = "[private] " + name + " : " + temp[1]
+                                            other_writer.write(msg.encode())
+                                            yield from other_writer.drain()   
 
                     else:
-                        other_writer.write(message.encode())
+                        other_writer.write((name + " " + message).encode())
                         yield from other_writer.drain()   
 
         print("Closing connection with client {}".format(client_addr))

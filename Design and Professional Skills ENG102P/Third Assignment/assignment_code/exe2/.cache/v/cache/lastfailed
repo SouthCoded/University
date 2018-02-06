@@ -1,4 +1,3 @@
 {
-  "server_test.py::TestServerClass::()::test_happy_path_one_message": true,
-  "server_test.py::TestServerClass::()::test_happy_path_several_messages": true
+  "client_test.py::TestCorrectedClientClass::()::test_set_id": true
 }
