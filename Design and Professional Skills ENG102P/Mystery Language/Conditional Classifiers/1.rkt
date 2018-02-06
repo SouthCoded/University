@@ -1,4 +1,3 @@
-#lang Conditionals
 
 if 0:
   true
