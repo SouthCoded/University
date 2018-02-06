@@ -1,89 +1,81 @@
 
-#include "simpletools.h"                      // Include simpletools header
-#include "abdrive.h"                          // Include abdrive header
-#include "ping.h"                             // Include ping header
-#include "simulator.h"
+  #include "simpletools.h"                      // Include simpletools header
+  #include "abdrive.h"                          // Include abdrive header
+  #include "ping.h"                             // Include ping header
+  #include "simulator.h"
 
-int turn;                                  
+  int turn;                                  
 
-void right_turn(){
-  
-  drive_goto(25,-25); //Turn right angle
+  void right_turn(){
+    
+    drive_goto(25,-25); //Turn right angle
 
-}
-
-void left_turn(){
-  
-  drive_goto(-25,25); //Turn left angle
-
-}
-void inRange(){
-  while(ping_cm(8) > 10){
-    drive_ramp(ping_cm(8),ping_cm(8));
   }
-  while(ping_cm(8) < 12){
-    drive_ramp(-ping_cm(8),-ping_cm(8));
+
+  void left_turn(){
+    
+    drive_goto(-25,25); //Turn left angle
+
   }
-}
-
-int main()                                   
-{
-  drive_setRampStep(10);  
-  int irLeft, irRight;
-  int last_turn = 0;
-
-  simulator_startNewSmokeTrail();
-  
-   while(1){
-
-    freqout(11, 1, 38000);                      
-    irLeft = input(10);
-
-    freqout(1, 1, 38000);
-    irRight = input(2);
-
-    if(irRight == 1 && irLeft == 1)             
-      while(irRight == 1 || irLeft == 1){
-        if(last_turn == 1){
-          drive_goto(2,-2);
-        }
-        else{
-          drive_goto(-2,2);
-        }
-      }                 
-
-    else if((irLeft == 0 && ping_cm(8) < 10) || (irRight == 0 && ping_cm(8) < 10)){
-      while(ping_cm(8) > 5){
-        drive_ramp(-ping_cm(8),-ping_cm(8));
-      }
-      break;
+  void inRange(){
+    while(ping_cm(8) > 10){
+      drive_ramp(ping_cm(8),ping_cm(8));
     }
+    while(ping_cm(8) < 12){
+      drive_ramp(-ping_cm(8),-ping_cm(8));
+    }
+  }
 
-    else if(irLeft == 0 && irRight == 0 && ping_cm(8) > 25)        
-      drive_rampStep(15, 15);               
+  int main()                                   
+  {
+    drive_setRampStep(10);  
+    int irLeft, irRight,right,left;
+    int last_turn = 0;
+
+    simulator_startNewSmokeTrail();
     
-    else if(irRight == 0){
-      last_turn = 1;
-      simulator_stopSmokeTrail();
-      right_turn();
-      inRange();
-      left_turn();
-      simulator_startNewSmokeTrail();
-      drive_ramp(15,15);
-    }                  
-    else if(irLeft == 0){        
-      last_turn = 2;
-      simulator_stopSmokeTrail();             
-      left_turn();
-      inRange();
-      right_turn();
-      simulator_startNewSmokeTrail();
-      drive_ramp(15,15);
-    }    
-    
+     while(1){
 
-    sleep(1);
+      irLeft = 0;
+      irRight = 0;
 
-  }  
-              
-}
+      right = 15;
+      left = 15;
+
+      for(int dacVal = 0; dacVal < 160; dacVal += 8)  {                                               
+        dac_ctr(26, 0, dacVal);                       
+        freqout(11, 1, 38000);                        
+        irLeft += input(10);           
+
+        dac_ctr(27, 1, dacVal);                      
+        freqout(1, 1, 38000);
+        irRight += input(2);                          
+      }                      
+
+      if(irLeft < 5){
+        //right turn
+        int temp = 5 - irLeft;
+        left -= (2 * temp);
+        right += (2 * temp);
+        drive_ramp(right,left);
+       }
+      
+      else if(irLeft > 5){
+        // left turn
+        int temp = irLeft - 5;
+        right -= (2 * temp);
+        left += (2 * temp);
+        drive_ramp(right,left);
+       }
+       else{
+        right = 20;
+        left = 20;
+        drive_ramp(right,left);
+      }
+       
+
+       
+     }                       
+
+
+  }
