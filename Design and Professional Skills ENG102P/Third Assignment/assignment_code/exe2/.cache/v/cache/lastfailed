@@ -1,3 +1,5 @@
 {
-  "client_test.py::TestCorrectedClientClass::()::test_set_id": true
+  "client_test.py::TestCorrectedClientClass::()::test_set_id_sucess": true,
+  "client_test.py::TestCorrectedClientClass::()::test_set_my_id": true,
+  "server_test.py::TestServerClass::()::test_server": true
 }

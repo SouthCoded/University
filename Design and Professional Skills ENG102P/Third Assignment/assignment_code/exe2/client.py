@@ -44,6 +44,7 @@ class Client:
     def read_from_network(self,reader,writer):
         while True:
             net_message = yield from reader.read(100)
+
             if writer.transport.is_closing():
                 print('Terminating read from network.')
                 break

@@ -86,6 +86,46 @@ class TestCorrectedClientClass:
         self.fake_writer = FakeWriter()
         self.testclient = client.Client()
 
+    def test_private(self,capsys):
+        messages = ['@server set_my_id(person1)','@person1 hey']
+        fake_reader = FakeReader(messages)
+        fake_console = FakeConsole(messages,output_pace=0.2)
+        with mock.patch('aioconsole.ainput',side_effect=\
+                fake_console.fake_console_read) as mock_console:
+            self.loop.run_until_complete(self.testclient.use_connection(fake_reader, self.fake_writer))
+        assert mock_console.call_count == len(messages) + 1
+        out, err = capsys.readouterr()
+        print(out)
+        for message in messages:
+            assert '[public] @person1 :' in out
+        assert 'Got close() from user.' in out
+
+    def test_set_id_name_error(self,capsys):
+        messages = ['@server set_my_id( )','@server set_my_id(client)','@server set_my_id(server)']
+        fake_reader = FakeReader(messages)
+        fake_console = FakeConsole(messages,output_pace=0.2)
+        with mock.patch('aioconsole.ainput',side_effect=\
+                fake_console.fake_console_read) as mock_console:
+            self.loop.run_until_complete(self.testclient.use_connection(fake_reader, self.fake_writer))
+        assert mock_console.call_count == len(messages) + 1
+        out, err = capsys.readouterr()
+        for message in messages:
+            assert '[error]' in out
+        assert 'Got close() from user.' in out
+        assert len(err) == 0
+
+    def test_set_id_error(self,capsys):
+        message = '@server '
+        fake_reader = FakeReader([message])
+        fake_console = FakeConsole([message],output_pace=0.2)
+        with mock.patch('aioconsole.ainput',side_effect=fake_console.fake_console_read) as mock_console:
+            self.loop.run_until_complete(
+                self.testclient.use_connection(fake_reader, self.fake_writer))
+        out, err = capsys.readouterr()
+        assert 'Must set name with @server set_my_id(user1)' in out.strip()
+        assert 'Got close() from user' in out.strip()
+        assert len(err) == 0
+
     # Check handling of interleaved read and write
     # (client should read everything before the user closes)
     def test_interleaved_messages(self,capsys):
