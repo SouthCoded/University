@@ -1,0 +1,4 @@
+For Function Calls, Core 1 reacted in the most predictable way. It follow the recursive calls and when the 
+final value returned it follow the previous returns and outputted the correct value. Core 2 however, simply 
+returned the last value and did not follow the other returns. This means that for Core 2, the return simply 
+exited after it was called. Core 3 was not able to do recursive calls as the program would time out.  

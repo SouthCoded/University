@@ -1,0 +1,3 @@
+For Core 2, having an anonyomous function call another anonymous function was fine. However for Core 1 the 
+function had not been initialized yet and thus was not able to be called. This is because Core 1 is a 
+statically typed language while Core 2 is dynamically typed. 
