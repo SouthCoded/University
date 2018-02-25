@@ -64,24 +64,47 @@ class TestServerClass:
     def setup_method(self,method):
         self.testserver = server.Server()
         self.loop = asyncio.get_event_loop()        
-        self.fake_writer = FakeWriter('fake client 1')
-        self.other_fake_writer = FakeWriter('fake client 2')
-        self.testserver.all_clients = set([self.fake_writer,self.other_fake_writer])
+        self.fake_writer = FakeWriter('fakeuser1')
+        self.other_fake_writer = FakeWriter('fakeuser2')
+        self.last_fake_writer = FakeWriter('fakeuser3')
 
-    # Check that the server correctly handles a single
-    # message, printing on stdout and echoing the message
+        self.testserver.all_clients = set([self.fake_writer,self.other_fake_writer])
+        self.testserver.set_username("fakeuser2", self.other_fake_writer)
+        self.testserver.set_username("fakeuser3", self.last_fake_writer)
+
+
+
     def test_private(self,capsys):
-        message = '@user1 Hello World!'
-        fake_reader = FakeReader([message])
+
+
+        message1 = '@server set_my_id(user1)'
+        message2 = '@fakeuser2 Hello World!'
+
+        fake_reader = FakeReader([message1,message2])
         self.loop.run_until_complete(self.testserver.handle_connection(
                                      fake_reader, self.fake_writer))
-        assert len(self.fake_writer.getvalue()) == 0
 
-        expected_out_msg1 = "@user1"
-        expected_out_msg2 = 'Closing connection with client' 
+        assert "[private]".encode() in self.other_fake_writer.getvalue()
+        assert "".encode() in self.last_fake_writer.getvalue()
+
+
+
+    def test_duplicates(self,capsys):
+        message1 = '@server set_my_id(fakeuser1)'
+
+        messages = [message1,message1]
+
+        fake_reader = FakeReader(messages)
+
+        self.loop.run_until_complete(
+            self.testserver.handle_connection(
+                fake_reader, self.fake_writer)
+        )
+
+        assert 'ERROR'.encode() in self.fake_writer.getvalue()
+       
+        assert len(self.testserver.all_clients) == 1
         out, err = capsys.readouterr()
-        assert expected_out_msg1 in out
-        assert expected_out_msg2 in out
         assert len(err) == 0
 
     def test_setting_id(self,capsys):
@@ -92,6 +115,9 @@ class TestServerClass:
         self.loop.run_until_complete(
             self.testserver.handle_connection(
                 fake_reader, self.fake_writer))
+
+        assert 'user1'.encode() in self.fake_writer.getvalue()
+
        
         assert self.fake_writer not in self.testserver.all_clients
         assert len(self.testserver.all_clients) == 1
@@ -101,34 +127,31 @@ class TestServerClass:
 
     # Check that the server correctly handles a single
     # message, printing on stdout and echoing the message
-    def test_happy_path_one_message(self,capsys):
+    def test_error(self,capsys):
         message = 'Hello World!'
         fake_reader = FakeReader([message])
         self.loop.run_until_complete(self.testserver.handle_connection(
                                      fake_reader, self.fake_writer))
-        assert len(self.fake_writer.getvalue()) == 0
-        assert message.encode() in self.other_fake_writer.getvalue()
+        assert len(self.fake_writer.getvalue()) == 28
+        assert ''.encode() in self.other_fake_writer.getvalue()
 
-        expected_out_msg1 = "Received Hello World"
-        expected_out_msg2 = 'Closing connection with client' 
         out, err = capsys.readouterr()
-        assert expected_out_msg1 in out
-        assert expected_out_msg2 in out
         assert len(err) == 0
 
     # If a client sends multiple messages, the server
     # should be able to handle all of them
     def test_happy_path_several_messages(self,capsys):
-        message1 = 'Hello World!'
-        message2 = 'That\'s all folks'
-        messages = [message1,message2]
+
+        message1 = '@server set_my_id(user1)'
+        message2 = 'Hello World!'
+        message3 = 'That\'s all folks'
+        messages = [message1,message2,message3]
         fake_reader = FakeReader(messages)
         self.loop.run_until_complete(
             self.testserver.handle_connection(
                 fake_reader, self.fake_writer))
-        assert len(self.fake_writer.getvalue()) == 0
-        assert message1.encode() in self.other_fake_writer.getvalue()
         assert message2.encode() in self.other_fake_writer.getvalue()
+        assert message3.encode() in self.other_fake_writer.getvalue()
        
         assert self.fake_writer not in self.testserver.all_clients
         assert len(self.testserver.all_clients) == 1

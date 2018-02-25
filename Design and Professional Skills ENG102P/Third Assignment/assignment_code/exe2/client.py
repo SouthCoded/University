@@ -56,20 +56,21 @@ class Client:
                 break
             elif "@client" in net_message.decode():
                 print("[server]" + net_message.decode()[7:])
+                if "username set" in net_message.decode():
+                    self.name = net_message.decode()[24:]
                 print('>> ',end='',flush=True)
-            elif "@server" in net_message.decode():
-                continue
             elif "[private]" in net_message.decode():
                 print(net_message.decode())
                 print('>> ',end='',flush=True)
-            elif self.name == None or self.name == "FAKE CLIENT":
-                self.name = "FAKE CLIENT"
-                print("[public] " + net_message.decode())
-                print('>> ',end='',flush=True)
             else:
                 temp = net_message.decode().split(" ",1)
-                print("[public] " + temp[0] + " : " + temp[1])
-                print('>> ',end='',flush=True)
+                if '@' in temp[0]:
+                    print("[public] " + temp[0][1:] + " : " + temp[1])
+                    print('>> ',end='',flush=True)
+                else:
+                    print("[public] " + temp[0] + " " + temp[1])
+                    print('>> ',end='',flush=True)
+
 
     # NOTE: you can modify the implementation of send_to_server (but not its signature)
     @asyncio.coroutine
@@ -79,7 +80,13 @@ class Client:
                 original_message = yield from aioconsole.ainput('>> ')
                 if original_message != None:
                     console_message = original_message.strip()
-                    if "@server set_my_id" in console_message:
+           
+                    if console_message == '':
+                        continue
+                    elif console_message == 'close()':
+                        raise ClosingException()
+                    
+                    elif "@server set_my_id" in console_message:
                         if " " in console_message[18:-1]:
                             print("[error] <Invalid character>")
                         elif "client" in console_message[18:-1]:
@@ -87,24 +94,18 @@ class Client:
                         elif "server" in console_message[18:-1]:
                             print("[error] <Invalid name>")
                         else:
-                            self.name = console_message[18:-1]
-                            writer.write(console_message.encode())
-                    else:                
-                        if console_message == '':
-                            continue
-                        elif console_message == 'close()':
-                            raise ClosingException()
-                        elif self.name == "FAKE CLIENT":
                             msg = console_message
                             writer.write(msg.encode())
-                        elif self.name == None:
-                           print("Must set name with @server set_my_id(user1)")
-                        elif "@" in console_message:
-                            priv = console_message
-                            writer.write(priv.encode()) 
+                    elif self.name is not None:
+                        temp = "@" + str(self.name)
+                        if temp in console_message:
+                            print("[error] <Private message to yourself")
                         else:
                             msg = console_message
                             writer.write(msg.encode())
+                    else:
+                        msg = console_message
+                        writer.write(msg.encode())
 
         except ClosingException:
             print('Got close() from user.')

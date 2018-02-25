@@ -35,6 +35,7 @@ class Server:
         self.set_username("",writer)
 
         while True:
+
             data = yield from reader.read(100)
             if data == None or len(data) == 0:
                 break
@@ -55,28 +56,34 @@ class Server:
                     mes = "@client ERROR does not match username standards"
                     writer.write(mes.encode())
 
+            elif self.address2name[writer.get_extra_info('peername')] == '':
+                mes = "@client ERROR not registered"
+                writer.write(mes.encode())
+
+
             for other_writer in self.all_clients:
 
                 if other_writer != writer:
 
                     name = self.address2name[writer.get_extra_info('peername')]
 
-                    if '@' in message:
-                        if "client" not in message:
-                            if "server" not in message:
-                                temp = message.split(" ",1)
-                                desired_user = temp[0][1:]
-                                add2name = self.get_registered_usernames_list()
-                                for x in add2name.keys():
-                                    if add2name[x] == desired_user:
-                                        if x == other_writer.get_extra_info('peername'):
-                                            msg = "[private] " + name + " : " + temp[1]
-                                            other_writer.write(msg.encode())
-                                            yield from other_writer.drain()   
+                    if name is not '':
+                        if "@" in message:
+                            if "client" not in message:
+                                if "server" not in message:
+                                    temp = message.split(" ",1)
+                                    desired_user = temp[0][1:]
+                                    add2name = self.get_registered_usernames_list()
+                                    for x in add2name.keys():
+                                        if add2name[x] == desired_user:
+                                            if x == other_writer.get_extra_info('peername'):
+                                                msg = "[private] " + name + " : " + temp[1]
+                                                other_writer.write(msg.encode())
+                                                yield from other_writer.drain()   
 
-                    else:
-                        other_writer.write((name + " " + message).encode())
-                        yield from other_writer.drain()   
+                        else:
+                            other_writer.write(("@" + name + " " + message).encode())
+                            yield from other_writer.drain()   
 
         print("Closing connection with client {}".format(client_addr))
         writer.close()
