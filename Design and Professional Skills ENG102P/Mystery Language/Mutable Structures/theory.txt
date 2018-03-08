@@ -1,0 +1,8 @@
+The difference between Core 1 and Core2/Advanced 1 is that Core 1 uses pass by reference when sending
+structures into a function. This means that modifications to the structure inside the function will also
+affect the structure outside of the function. However, Core2 and Advanced 1 use pass by value which only
+passes the values into the function and therefore any edits inside don't affect the structure outside. 
+The difference between Core 2 and Advanced 1 is that the values inside the structure, if they are also 
+another structure, those values for Advanced 1 are pass by reference. Meaning the values inside the 
+function can be changed and they will affect the structure outside of the function while Core 2 does
+pass by value for the values inside of a structure. 

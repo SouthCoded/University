@@ -1,0 +1,10 @@
+Mutable Vars
+
+In regards to function calls, Core 1 simply uses pass by value, therefore when a variable is sent as a 
+parameter, only the variable is sent. This means that the original variable is not modified or mutated. 
+In my example, b is simply assigned to the same value of a and therefore when b is changed it does not 
+affect a. This is not the case for Core 2 which sends the reference and thus b is assigned to a and 
+therefore when b changes, a also changes. However Core 2 allows for both variables to reference the same
+object while Advanced 1 does not. It combines both a and b into one reference and therefore when you try
+to add a and b together, it does not allow it as both variables reference the same value and instead just
+does nothing.  
