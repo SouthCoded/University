@@ -1,0 +1,606 @@
+<!--
+  Generated template for the LoginPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+
+  <ion-navbar>
+    <ion-title>Login</ion-title>
+  </ion-navbar>
+
+</ion-header>
+
+<ion-content padding>
+
+	<style>
+		.center {
+	  	  text-align:center;
+		}
+    .right{
+      text-align:right;
+    }
+
+		.button{
+			background:DarkMagenta;
+			color:White;
+			font-size:20px;
+			height:25px;
+			width:100px;
+		}
+
+    .client{
+			background:Black;
+			color:White;
+			font-size:20px;
+			height:25px;
+			width:100px;
+		}
+
+    input[type="radio"]{
+      display:none;
+    }
+    
+    .board{
+      font-size:1vmin;
+      outline:2em solid Purple;
+      width:60em;
+      height:80em;
+      position:absolute;
+      left:calc(50% - 28em);
+      top:40em;
+      overflow:hidden;
+      text-align:center;
+    }
+    [class^=piece]{
+      position:absolute;
+      width:20em;
+      height:20em;
+      transition:top .5s, left .5s;
+    }
+    [class^=piece]::after{
+      content:'';
+      position:absolute;
+      top:0;
+      left:0;
+      right:0;
+      bottom:0;
+      z-index:10;
+      background-size:60em 80em;
+      border-radius:2em;
+      border:.5em groove #999;
+      box-sizing:box-border;
+    }
+    .piece-a::after{
+      background-position:top left;
+    }
+    .piece-b::after{
+      background-position:0% 33%;
+    }
+    .piece-c::after{
+      background-position:50% 33%;
+    }
+    .piece-d::after{
+      background-position:50% 66%;
+    }
+    .piece-e::after{
+      background-position:100% 100%;
+    }
+    .piece-f::after{
+      background-position:100% 33%;
+    }
+    .piece-g::after{
+      background-position:0% 66%;
+    }
+    .piece-h::after{
+      background-position:top center;
+    }
+    .piece-i::after{
+      background-position:100% 66%;
+    }
+    .piece-j::after{
+      background-position:0% 100%;
+    }
+    .piece-k::after{
+      background-position:top right;
+    }
+   
+    [class^=piece] label{
+      display:block;
+      width: 13em;
+      height: 13em;
+      position:absolute;
+      transform:rotate(45deg);
+      background:DarkMagenta;
+    }
+    [class^=piece] label:hover{
+      background:Magenta;
+      outline:.5em solid #111;
+    }
+    [class^=piece] label[for$="up"]{
+      top: -6em;
+      left:3.5em;
+    }
+    [class^=piece] label[for$="middle"]{
+      /*display:none*/
+      z-index:9;
+      top: 4em;
+      left:3.5em;
+    }
+    [class^=piece] label[for$="othermiddle"]{
+      /*display:none*/
+      z-index:9;
+      top: 4em;
+      left:3.5em;
+    }
+    [class^=piece] label[for$="down"]{
+      bottom: -6em;
+      left:3.5em;
+    }
+    [class^=piece] label[for$="norm"]{
+      bottom: -6em;
+      left:3.5em;
+      /*background-color:lightblue;*/
+    }
+    [class^=piece] label[for$="left"]{
+      left: -6em;
+      top:3.5em;
+    }
+    [class^=piece] label[for$="center"]{
+      display:none;
+      z-index:5;
+      top:3.5em;
+    }
+    [class^=piece] label[for$="right"]{
+      right: -6em;
+      top:3.5em;
+    }
+
+    #a-up:checked ~* [for="a-middle"],
+    #b-up:checked ~* [for="b-middle"],
+    #c-up:checked ~* [for="c-middle"],
+    #d-up:checked ~* [for="d-middle"],
+    #e-up:checked ~* [for="e-middle"],
+    #f-up:checked ~* [for="f-middle"],
+    #g-up:checked ~* [for="g-middle"],
+    #h-up:checked ~* [for="h-middle"],
+    #i-up:checked ~* [for="i-middle"],
+    #j-up:checked ~* [for="j-middle"],
+    #k-up:checked ~* [for="k-middle"]{
+      display:block;
+      transform:translate(0,9em) rotate(45deg);
+    }
+    #a-norm:checked ~* [for="a-middle"],
+    #b-norm:checked ~* [for="b-middle"],
+    #c-norm:checked ~* [for="c-middle"],
+    #d-norm:checked ~* [for="d-middle"],
+    #e-norm:checked ~* [for="e-middle"],
+    #f-norm:checked ~* [for="f-middle"],
+    #g-norm:checked ~* [for="g-middle"],
+    #h-norm:checked ~* [for="h-middle"],
+    #i-norm:checked ~* [for="i-middle"],
+    #j-norm:checked ~* [for="j-middle"],
+    #k-norm:checked ~* [for="k-middle"],
+    #a-othermiddle:checked ~* [for="a-middle"],
+    #b-othermiddle:checked ~* [for="b-middle"],
+    #c-othermiddle:checked ~* [for="c-middle"],
+    #d-othermiddle:checked ~* [for="d-middle"],
+    #e-othermiddle:checked ~* [for="e-middle"],
+    #f-othermiddle:checked ~* [for="f-middle"],
+    #g-othermiddle:checked ~* [for="g-middle"],
+    #h-othermiddle:checked ~* [for="h-middle"],
+    #i-othermiddle:checked ~* [for="i-middle"],
+    #j-othermiddle:checked ~* [for="j-middle"],
+    #k-othermiddle:checked ~* [for="k-middle"]{
+      display:block;
+      transform:translate(0,-10em) rotate(45deg);
+      /*background-color:blue;*/
+    }
+    #a-middle:checked ~* [for="a-othermiddle"],
+    #b-middle:checked ~* [for="b-othermiddle"],
+    #c-middle:checked ~* [for="c-othermiddle"],
+    #d-middle:checked ~* [for="d-othermiddle"],
+    #e-middle:checked ~* [for="e-othermiddle"],
+    #f-middle:checked ~* [for="f-othermiddle"],
+    #g-middle:checked ~* [for="g-othermiddle"],
+    #h-middle:checked ~* [for="h-othermiddle"],
+    #i-middle:checked ~* [for="i-othermiddle"],
+    #j-middle:checked ~* [for="j-othermiddle"],
+    #k-middle:checked ~* [for="k-othermiddle"]{
+      display:block;
+      transform:translate(0,9em) rotate(45deg);
+      /*background-color:green;*/
+    }
+    #a-down:checked ~* [for="a-norm"],
+    #b-down:checked ~* [for="b-norm"],
+    #c-down:checked ~* [for="c-norm"],
+    #d-down:checked ~* [for="d-norm"],
+    #e-down:checked ~* [for="e-norm"],
+    #f-down:checked ~* [for="f-norm"],
+    #g-down:checked ~* [for="g-norm"],
+    #h-down:checked ~* [for="h-norm"],
+    #i-down:checked ~* [for="i-norm"],
+    #j-down:checked ~* [for="j-norm"],
+    #k-down:checked ~* [for="k-norm"]{
+      display:block;
+      transform:translate(0,-19em) rotate(45deg);
+    }
+    #a-left:checked ~* [for="a-center"],
+    #b-left:checked ~* [for="b-center"],
+    #c-left:checked ~* [for="c-center"],
+    #d-left:checked ~* [for="d-center"],
+    #e-left:checked ~* [for="e-center"],
+    #f-left:checked ~* [for="f-center"],
+    #g-left:checked ~* [for="g-center"],
+    #h-left:checked ~* [for="h-center"],
+    #i-left:checked ~* [for="i-center"],
+    #j-left:checked ~* [for="j-center"],
+    #k-left:checked ~* [for="k-center"]{
+      display:block;
+      transform:translate(13em,0) rotate(45deg);
+    }
+    #a-right:checked ~* [for="a-center"],
+    #b-right:checked ~* [for="b-center"],
+    #c-right:checked ~* [for="c-center"],
+    #d-right:checked ~* [for="d-center"],
+    #e-right:checked ~* [for="e-center"],
+    #f-right:checked ~* [for="f-center"],
+    #g-right:checked ~* [for="g-center"],
+    #h-right:checked ~* [for="h-center"],
+    #i-right:checked ~* [for="i-center"],
+    #j-right:checked ~* [for="j-center"],
+    #k-right:checked ~* [for="k-center"]{
+      display:block;
+      transform:translate(-6em,0) rotate(45deg);
+    }
+
+    #a-up:checked ~ * .piece-a,
+    #b-up:checked ~ * .piece-b,
+    #c-up:checked ~ * .piece-c,
+    #d-up:checked ~ * .piece-d,
+    #e-up:checked ~ * .piece-e,
+    #f-up:checked ~ * .piece-f,
+    #g-up:checked ~ * .piece-g,
+    #h-up:checked ~ * .piece-h,
+    #i-up:checked ~ * .piece-i,
+    #j-up:checked ~ * .piece-j,
+    #k-up:checked ~ * .piece-k{
+      top:0;
+    }
+    #a-middle:checked ~ * .piece-a,
+    #b-middle:checked ~ * .piece-b,
+    #c-middle:checked ~ * .piece-c,
+    #d-middle:checked ~ * .piece-d,
+    #e-middle:checked ~ * .piece-e,
+    #f-middle:checked ~ * .piece-f,
+    #g-middle:checked ~ * .piece-g,
+    #h-middle:checked ~ * .piece-h,
+    #i-middle:checked ~ * .piece-i,
+    #j-middle:checked ~ * .piece-j,
+    #k-middle:checked ~ * .piece-k{
+      top:20em;
+    }
+    #a-norm:checked ~ * .piece-a,
+    #b-norm:checked ~ * .piece-b,
+    #c-norm:checked ~ * .piece-c,
+    #d-norm:checked ~ * .piece-d,
+    #e-norm:checked ~ * .piece-e,
+    #f-norm:checked ~ * .piece-f,
+    #g-norm:checked ~ * .piece-g,
+    #h-norm:checked ~ * .piece-h,
+    #i-norm:checked ~ * .piece-i,
+    #j-norm:checked ~ * .piece-j,
+    #k-norm:checked ~ * .piece-k,
+    #a-othermiddle:checked ~ * .piece-a,
+    #b-othermiddle:checked ~ * .piece-b,
+    #c-othermiddle:checked ~ * .piece-c,
+    #d-othermiddle:checked ~ * .piece-d,
+    #e-othermiddle:checked ~ * .piece-e,
+    #f-othermiddle:checked ~ * .piece-f,
+    #g-othermiddle:checked ~ * .piece-g,
+    #h-othermiddle:checked ~ * .piece-h,
+    #i-othermiddle:checked ~ * .piece-i,
+    #j-othermiddle:checked ~ * .piece-j,
+    #k-othermiddle:checked ~ * .piece-k{
+      top:40em;
+    }
+
+    #a-down:checked ~ * .piece-a,
+    #b-down:checked ~ * .piece-b,
+    #c-down:checked ~ * .piece-c,
+    #d-down:checked ~ * .piece-d,
+    #e-down:checked ~ * .piece-e,
+    #f-down:checked ~ * .piece-f,
+    #g-down:checked ~ * .piece-g,
+    #h-down:checked ~ * .piece-h,
+    #i-down:checked ~ * .piece-i,
+    #j-down:checked ~ * .piece-j,
+    #k-down:checked ~ * .piece-k{
+      top:60em;
+    }
+    #a-left:checked ~ * .piece-a,
+    #b-left:checked ~ * .piece-b,
+    #c-left:checked ~ * .piece-c,
+    #d-left:checked ~ * .piece-d,
+    #e-left:checked ~ * .piece-e,
+    #f-left:checked ~ * .piece-f,
+    #g-left:checked ~ * .piece-g,
+    #h-left:checked ~ * .piece-h,
+    #i-left:checked ~ * .piece-i,
+    #j-left:checked ~ * .piece-j,
+    #k-left:checked ~ * .piece-k{
+      left:0;
+    }
+    #a-center:checked ~ * .piece-a,
+    #b-center:checked ~ * .piece-b,
+    #c-center:checked ~ * .piece-c,
+    #d-center:checked ~ * .piece-d,
+    #e-center:checked ~ * .piece-e,
+    #f-center:checked ~ * .piece-f,
+    #g-center:checked ~ * .piece-g,
+    #h-center:checked ~ * .piece-h,
+    #i-center:checked ~ * .piece-i,
+    #j-center:checked ~ * .piece-j,
+    #k-center:checked ~ * .piece-k{
+      left:20em;
+    }
+    #a-right:checked ~ * .piece-a,
+    #b-right:checked ~ * .piece-b,
+    #c-right:checked ~ * .piece-c,
+    #d-right:checked ~ * .piece-d,
+    #e-right:checked ~ * .piece-e,
+    #f-right:checked ~ * .piece-f,
+    #g-right:checked ~ * .piece-g,
+    #h-right:checked ~ * .piece-h,
+    #i-right:checked ~ * .piece-i,
+    #j-right:checked ~ * .piece-j,
+    #k-right:checked ~ * .piece-k{
+      left:40em;
+    }
+    
+    /*~ #b-middle:checked ~ #b-left:checked ~ #c-middle:checked ~ #c-center:checked ~ #d-othermiddle:checked ~ #d-center:checked ~ #e-down:checked ~ #e-right:checked ~*/
+    #a-up:checked ~ #a-left:checked {
+      color: #000;
+    }
+
+    .selectBG{
+      display:inline-block;
+      font-family:arial;
+      font-size:2vmin;
+      width:8em;
+      text-align:center;
+      padding:1em 0;
+      background:#000;
+      color:#fff;
+      border:.25em solid #333;
+      margin:2em .25em;
+    }
+
+    #cage:checked ~ * [class^=piece]::after{
+      background-image:url("assets/imgs/drive_3x4.png");
+    }
+
+	</style>
+    	
+        <input type="radio" id="cage" name="image"checked>
+
+        <input type="radio" id="a-up" name="a-vertical" (click)="setA1('true')" >
+        <input type="radio" id="a-middle" name="a-vertical" (click)="setA1('false')"checked>
+        <input type="radio" id="a-norm" name="a-vertical" (click)="setA1('false')">
+        <input type="radio" id="a-othermiddle" name="a-vertical" (click)="setA1('false')">
+        <input type="radio" id="a-down" name="a-vertical" (click)="setA1('false')">
+        <input type="radio" id="a-left" name="a-horizontal" (click)="setA2('true')" checked>
+        <input type="radio" id="a-center" name="a-horizontal" (click)="setA2('false')">
+        <input type="radio" id="a-right" name="a-horizontal"(click)="setA2('false')">
+        <input type="radio" id="b-up" name="b-vertical" (click)="setB1('false')" >
+        <input type="radio" id="b-middle" name="b-vertical" (click)="setB1('true')">
+        <input type="radio" id="b-othermiddle" name="b-vertical" (click)="setB1('false')">
+        <input type="radio" id="b-norm" name="b-vertical" (click)="setB1('false')">
+        <input type="radio" id="b-down" name="b-vertical" (click)="setB1('false')" checked>
+        <input type="radio" id="b-left" name="b-horizontal" (click)="setB2('true')" checked>
+        <input type="radio" id="b-center" name="b-horizontal" (click)="setB2('false')">
+        <input type="radio" id="b-right" name="b-horizontal" (click)="setB2('false')">
+        <input type="radio" id="c-up" name="c-vertical" (click)="setC1('false')">
+        <input type="radio" id="c-middle" name="c-vertical" (click)="setC1('false')" checked>
+        <input type="radio" id="c-othermiddle" name="c-vertical" (click)="setC1('true')">
+        <input type="radio" id="c-norm" name="c-vertical" (click)="setC1('true')">
+        <input type="radio" id="c-down" name="c-vertical" (click)="setC1('false')">
+        <input type="radio" id="c-left" name="c-horizontal" (click)="setC2('false')">
+        <input type="radio" id="c-center" name="c-horizontal" (click)="setC2('true')">
+        <input type="radio" id="c-right" name="c-horizontal" (click)="setC2('false')"checked>
+        <input type="radio" id="d-up" name="d-vertical" (click)="setD1('false')" checked>
+        <input type="radio" id="d-middle" name="d-vertical" (click)="setD1('false')">
+        <input type="radio" id="d-othermiddle" name="d-vertical" (click)="setD1('true')">
+        <input type="radio" id="d-norm" name="d-vertical" (click)="setD1('true')">
+        <input type="radio" id="d-down" name="d-vertical" (click)="setD1('false')">
+        <input type="radio" id="d-left" name="d-horizontal" (click)="setD2('false')">
+        <input type="radio" id="d-center" name="d-horizontal" (click)="setD2('false')" checked>
+        <input type="radio" id="d-right" name="d-horizontal" (click)="setD2('true')">
+        <input type="radio" id="e-up" name="e-vertical" (click)="setE1('false')"checked>
+        <input type="radio" id="e-middle" name="e-vertical" (click)="setE1('false')">
+        <input type="radio" id="e-othermiddle" name="e-vertical" (click)="setE1('false')">
+        <input type="radio" id="e-norm" name="e-vertical" (click)="setE1('false')">
+        <input type="radio" id="e-down" name="e-vertical" (click)="setE1('true')">
+        <input type="radio" id="e-left" name="e-horizontal" (click)="setE2('false')">
+        <input type="radio" id="e-center" name="e-horizontal" (click)="setE2('false')">
+        <input type="radio" id="e-right" name="e-horizontal" (click)="setE2('true')"checked>
+        <input type="radio" id="f-up" name="f-vertical">
+        <input type="radio" id="f-middle" name="f-vertical" checked>
+        <input type="radio" id="f-othermiddle" name="f-vertical">
+        <input type="radio" id="f-norm" name="f-vertical">
+        <input type="radio" id="f-down" name="f-vertical">
+        <input type="radio" id="f-left" name="f-horizontal">
+        <input type="radio" id="f-center" name="f-horizontal" checked>
+        <input type="radio" id="f-right" name="f-horizontal">
+        <input type="radio" id="g-up" name="g-vertical" >
+        <input type="radio" id="g-middle" name="g-vertical">
+        <input type="radio" id="g-othermiddle" name="g-vertical">
+        <input type="radio" id="g-norm" name="g-vertical">
+        <input type="radio" id="g-down" name="g-vertical"checked>
+        <input type="radio" id="g-left" name="g-horizontal">
+        <input type="radio" id="g-center" name="g-horizontal"checked>
+        <input type="radio" id="g-right" name="g-horizontal" >
+        <input type="radio" id="h-up" name="h-vertical"checked>
+        <input type="radio" id="h-middle" name="h-vertical">
+        <input type="radio" id="h-othermiddle" name="h-vertical">
+        <input type="radio" id="h-norm" name="h-vertical">
+        <input type="radio" id="h-down" name="h-vertical" >
+        <input type="radio" id="h-left" name="h-horizontal" checked>
+        <input type="radio" id="h-center" name="h-horizontal">
+        <input type="radio" id="h-right" name="h-horizontal">
+        <input type="radio" id="i-up" name="i-vertical">
+        <input type="radio" id="i-middle" name="i-vertical">
+        <input type="radio" id="i-othermiddle" name="i-vertical">
+        <input type="radio" id="i-norm" name="i-vertical" checked>
+        <input type="radio" id="i-down" name="i-vertical">
+        <input type="radio" id="i-left" name="i-horizontal" checked>
+        <input type="radio" id="i-center" name="i-horizontal">
+        <input type="radio" id="i-right" name="i-horizontal">
+        <input type="radio" id="j-up" name="j-vertical">
+        <input type="radio" id="j-middle" name="j-vertical">
+        <input type="radio" id="j-othermiddle" name="j-vertical">
+        <input type="radio" id="j-norm" name="j-vertical" checked>
+        <input type="radio" id="j-down" name="j-vertical" >
+        <input type="radio" id="j-left" name="j-horizontal" >
+        <input type="radio" id="j-center" name="j-horizontal"checked>
+        <input type="radio" id="j-right" name="j-horizontal">
+        <input type="radio" id="k-up" name="k-vertical">
+        <input type="radio" id="k-middle" name="k-vertical">
+        <input type="radio" id="k-othermiddle" name="k-vertical">
+        <input type="radio" id="k-norm" name="k-vertical"checked>
+        <input type="radio" id="k-down" name="k-vertical" >
+        <input type="radio" id="k-left" name="k-horizontal" >
+        <input type="radio" id="k-center" name="k-horizontal">
+        <input type="radio" id="k-right" name="k-horizontal"checked>
+
+
+         <div style="position: absolute; top: 3em; left: 4em" >
+  	        <p style="font-size:20px;">
+  		        Arrange to form the DRIVE logo  
+  	        </p>
+        </div>
+
+        <div class="board">
+          <div class="piece-a">
+            <label for="a-up"></label>
+            <label for="a-middle"></label>
+            <label for="a-othermiddle"></label>
+            <label for="a-norm"></label>
+            <label for="a-down"></label>
+            <label for="a-left"></label>
+            <label for="a-center"></label>
+            <label for="a-right"></label>
+          </div>
+          <div class="piece-b">
+            <label for="b-up"></label>
+            <label for="b-middle"></label>
+            <label for="b-othermiddle"></label>
+            <label for="b-norm"></label>
+            <label for="b-down"></label>
+            <label for="b-left"></label>
+            <label for="b-center"></label>
+            <label for="b-right"></label>
+          </div>
+          <div class="piece-c">
+            <label for="c-up"></label>
+            <label for="c-middle"></label>
+            <label for="c-othermiddle"></label>
+            <label for="c-norm"></label>
+            <label for="c-down"></label>
+            <label for="c-left"></label>
+            <label for="c-center"></label>
+            <label for="c-right"></label>
+          </div>
+          
+          <div class="piece-d">
+            <label for="d-up"></label>
+            <label for="d-middle"></label>
+            <label for="d-othermiddle"></label>
+            <label for="d-norm"></label>
+            <label for="d-down"></label>
+            <label for="d-left"></label>
+            <label for="d-center"></label>
+            <label for="d-right"></label>
+          </div>
+          <div class="piece-e">
+            <label for="e-up"></label>
+            <label for="e-middle"></label>
+            <label for="e-othermiddle"></label>
+            <label for="e-norm"></label>
+            <label for="e-down"></label>
+            <label for="e-left"></label>
+            <label for="e-center"></label>
+            <label for="e-right"></label>
+          </div>
+          <div class="piece-f">
+            <label for="f-up"></label>
+            <label for="f-middle"></label>
+            <label for="f-othermiddle"></label>
+            <label for="f-norm"></label>
+            <label for="f-down"></label>
+            <label for="f-left"></label>
+            <label for="f-center"></label>
+            <label for="f-right"></label>
+          </div>
+          
+          <div class="piece-g">
+            <label for="g-up"></label>
+            <label for="g-middle"></label>
+            <label for="g-othermiddle"></label>
+            <label for="g-norm"></label>
+            <label for="g-down"></label>
+            <label for="g-left"></label>
+            <label for="g-center"></label>
+            <label for="g-right"></label>
+          </div>
+          <div class="piece-h">
+            <label for="h-up"></label>
+            <label for="h-middle"></label>
+            <label for="h-othermiddle"></label>
+            <label for="h-norm"></label>
+            <label for="h-down"></label>
+            <label for="h-left"></label>
+            <label for="h-center"></label>
+            <label for="h-right"></label>
+          </div>
+          <div class="piece-i">
+            <label for="i-up"></label>
+            <label for="i-middle"></label>
+            <label for="i-othermiddle"></label>
+            <label for="i-norm"></label>
+            <label for="i-down"></label>
+            <label for="i-left"></label>
+            <label for="i-center"></label>
+            <label for="i-right"></label>
+          </div>
+          <div class="piece-j">
+            <label for="j-up"></label>
+            <label for="j-middle"></label>
+            <label for="j-othermiddle"></label>
+            <label for="j-norm"></label>
+            <label for="j-down"></label>
+            <label for="j-left"></label>
+            <label for="j-center"></label>
+            <label for="j-right"></label>
+          </div>
+
+
+
+        </div>
+
+
+        <div style="position: absolute; bottom: 20px; left: 9em;" >
+  	        <p>
+  		        <button ion-button (click) = "solvedPuzzle()"> Skip </button> 
+  	        </p>
+        </div>
+
+  
+ 
+
+  
+
+    
+
+</ion-content>
