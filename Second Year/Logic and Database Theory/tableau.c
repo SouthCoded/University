@@ -4,7 +4,8 @@
 
 
 
-int Fsize=50; /*maximum formula length*/
+int Fsize=50;
+ /*maximum formula length*/
 int cases =10;/* number of formulas expected in input.txt*/
 int i;/* in case you need it */
 int ThSize=100;/* maximum size of set of formulas*/
@@ -13,10 +14,10 @@ int TabSize=500; /*maximum length of tableau queue*/
 
 
 /* A set will contain a list of words. Use NULL for emptyset.  */
-  struct set{
-    char *item;/*first word of non-empty set*/
-    struct set *tail;/*remaining words in the set*/
-  };
+struct set{
+  char *item;/*first word of non-empty set*/
+  struct set *tail;/*remaining words in the set*/
+};
 
 /* A tableau will contain a list of pointers to sets (of words).  Use NULL for empty list.*/
 struct tableau {
@@ -197,136 +198,20 @@ int parse(char *g){
 
 }
 
-void complete(struct tableau *t){
-  
-  char equation[100] = "";
-  char h[100] = "";
-  char temp[100] = "";
-  int j = 0;
-
-  equation[0] = '-';
-
-  for(int i = 1; i < strlen(t->S->item)+1;i++){
-    equation[i] = t->S->item[i-1];
-  }
-
-  //printf("%s\n",equation);
-
-  //Getting ride of the - in front
-  if(equation[1] == '-'){
-    int incr = 0;
-
-    while(equation[incr] == '-'){
-      incr ++;
-    }
-
-    if(incr/2 == 0){
-      int ab = 0;
-
-      for(int i = incr; i < strlen(equation);i++){
-        temp[ab] = equation[i];
-        ab++;
-      }
-      printf("Even temp %s\n",temp);
-      //t->S->tail = &temp;
-    }
-    else{
-      int ab = 0;
-
-      for(int i = incr-1; i < strlen(equation);i++){
-        temp[ab] = equation[i];
-        ab++;
-      }
-      //t->S->tail = &temp;
-    }
-    //printf("%s\n",t->S->tail);
-  }
-
-  //Loop here to call finder on all branches of the tableau
-  int found = finder(t);
-
-  //This means that it is a literal, so should move to another branch if there is one
-  if(found == -1){
-    printf("Literal %s\n\n",equation);
-
-  } // This means that it can be split further, so continue
-  else{
-   
-    int ls = 0;
-    int rs = 0;
-    int neg = 0;
-    int leftbracket = 0;
-
-    char left[100] = "";
-    char right[100] = "";
-    char begin[100] = "";
-
-    int type = 0; //0 is Alpha, 1 is Beta
-
-    printf("Type of rule %c\n",equation[found+1]);
-    if(equation[found+1] == 'v'){
-      type = 1;
-    }
-
-
-
-
-
-    printf("Full equation %s\n", equation);
-
-    while(equation[neg] != '('){
-      begin[neg] = equation[neg];
-      neg ++;
-    }
-
-    strcpy(left,begin);
-    strcpy(right,begin);
-    ls += neg;
-    rs += neg;
-
-    for(int i = 0 ; i < strlen(equation);i++){  
-
-       if(i <= found){
-
-        if(leftbracket == 1){
-          left[ls] = equation[i];
-          ls++;
-        }
-
-        if(equation[i] == '('){
-          leftbracket = 1;
-        }
-
-       }
-    }
-    printf("Left half of equation %s\n", left);
-    
-    
-    for(int i = 0 ; i < strlen(equation)-1;i++){
-       if(i > found+1){
-        right[rs] = equation[i];
-        rs++;
-       }
-    }
-    printf("Right half of equation %s\n\n", right);
-
-  }
-
-}
-
-int finder(struct tableau *t){
+int finder(char *tobeFound){
 
     int found = -1;
 
     char equation[100] = "";
 
-    strcpy(equation,t->S->item);
+    strcpy(equation,tobeFound);
 
     for(int i = 0; i < strlen(equation);i++){
 
       if(equation[i] == '('){
         int placement = i;
         i++;
+
         //Memorizes equation, putting the () into another array 
         while((equation[i] != ')' && equation[i] != '(') && i < strlen(equation)){
           i++; 
@@ -369,10 +254,338 @@ int finder(struct tableau *t){
 
 }
 
+char* notReducer(char *reduce){
+
+      char* temp = malloc(Fsize);
+
+      int incr = 0;
+
+      while(reduce[incr] == '-'){
+        incr ++;
+      }
+
+      if(incr%2 == 0 && incr > 0){
+        int ab = 0;
+
+        for(int i = incr; i < strlen(reduce);i++){
+          temp[ab] = reduce[i];
+          ab++;
+        }
+       return temp;
+      }
+      else if(incr%2 == 1){
+        int ab = 0;
+
+        for(int i = incr-1; i < strlen(reduce);i++){
+          temp[ab] = reduce[i];
+          ab++;
+        }
+       return temp;
+      }
+      
+      return reduce;
+    
+}
+
+void addToEnd(struct tableau *t, char *addition){
+
+    struct set *temp = malloc(Fsize);
+    struct set *current = t->S;
+
+    if(current != NULL){
+     
+      while(current->tail != NULL){
+        current = current->tail;
+      }
+        
+      temp->item = addition;
+      temp->tail = NULL;
+      current->tail = temp;
+    }
+    else{
+      temp->item = addition;
+      temp->tail = NULL;
+      current = temp;
+      t->S = current;
+
+    } 
+}
+
+void startNewBranch(struct tableau *t, char *addition){
+
+  //Finds the next empty space
+  struct tableau *temp = t;
+  while(temp->rest !=NULL){
+    temp = temp->rest;
+  }
+
+
+  struct tableau *nTab = malloc(Fsize);
+
+  //Copying the strings
+  struct set *current = t->S;
+
+  while(current != NULL){
+    char *temp = malloc(Fsize);
+    strcpy(temp,current->item);
+
+    addToEnd(nTab,temp);        
+    current = current->tail;
+  }   
+
+  addToEnd(nTab,addition);
+    
+  temp->rest = nTab;
+
+}
+
+
+void readTab(struct tableau *t){
+   while(t != NULL){
+      printf("NEW TAB\n");
+      struct set *temp = t->S;
+      while(temp != NULL){
+          printf("This is the value's %s\n",temp->item);
+          temp = temp->tail;
+      }           
+      t = t->rest;
+    }
+}
+
+void complete(struct tableau *t){
+
+  struct tableau *loop = t;
+
+  while(loop != NULL){
+    char* equation = "";
+          
+    struct set *current = loop->S; //address of current points to t->S, equation points to current ->item;
+
+    if(current->tail != NULL){
+      while(current->tail != NULL){
+          current = current->tail;
+      }     
+    }
+
+    int follow = 0;
+
+    while(current != NULL){
+
+      char* reduced = malloc(Fsize);
+
+
+      equation = current->item; //equation points to current->items address
+
+      strcpy(reduced,notReducer(equation));  //reduced is still pointing to its own address
+            
+      printf("Equation %s \n",equation);
+
+      if(strcmp(equation,reduced) != 0){ //equation and reduced are still pointing to their own address
+
+        printf("Reduce Equation %s\n",reduced);
+        addToEnd(loop,reduced);
+
+      }
+      else{
+        
+        int found = finder(equation);  //This means that it is a literal, so should move to another branch if there is one
+              
+        if(found == -1){
+          printf("Literal %s\n\n",current->item);
+        } // This means that it can be split further, so continue
+        else{
+               
+        int ls = 0;
+        int rs = 0;
+        int neg = 0;
+        int leftbracket = 0;
+
+        char* left = malloc(Fsize);
+        char* right = malloc(Fsize);
+        char begin[100] = "";
+
+        if(equation[found] == '>'){
+          
+          if(equation[0] != '-'){
+            char leftonly[100] = "";
+            leftonly[0] = '-';
+
+            while(equation[neg] != '('){
+              begin[neg] = equation[neg];
+              leftonly[neg+1] = equation[neg];
+              neg ++;
+            }
+
+            strcpy(left,leftonly);
+            strcpy(right,begin);
+
+            ls++;
+          }
+          else{
+            char rightonly[100] = "";
+            rightonly[0] = '-';
+
+            strcpy(left,begin);
+            strcpy(right,rightonly);
+
+            rs++;
+          }
+
+        }
+        else{
+
+          while(equation[neg] != '('){
+            begin[neg] = equation[neg];
+            neg ++;
+          }
+
+          strcpy(left,begin);
+          strcpy(right,begin);
+
+        }
+                
+        ls += neg;
+        rs += neg;
+
+        for(int i = 0 ; i < strlen(equation);i++){  
+
+          if(i < found){
+            if(leftbracket == 1){
+              left[ls] = equation[i];
+              ls++;
+            }
+            if(equation[i] == '('){
+              leftbracket = 1;
+            }
+          }
+        }
+        printf("Left half of equation %s\n", left);
+                
+                
+        for(int i = 0 ; i < strlen(equation)-1;i++){
+          if(i > found){
+            right[rs] = equation[i];
+            rs++;
+          }
+        }
+        printf("Right half of equation %s\n", right);
+
+        int type = 0; //0 is Alpha, 1 is Beta
+
+        if((equation[found] == 'v' && equation[0] != '-') || (equation[found] == '^' && equation[0] == '-') || (equation[found] == '>' && equation[0] != '-') ){
+          type = 1;
+        }
+        
+        printf("This is equation %s type %d and follow %d\n",equation,type,follow);
+        if(type == 0 && follow == 0){
+          
+          addToEnd(loop,left);
+          addToEnd(loop,right);  
+        }
+       
+        if(type == 0 && follow == 1){
+
+          addToEnd(loop,left);
+          addToEnd(loop,right);  
+
+          addToEnd(loop->rest,left);
+          addToEnd(loop->rest,right);  
+
+        }
+        
+        if(type == 1 && follow == 1){
+
+          follow = 0;
+
+          startNewBranch(loop,right);
+          addToEnd(loop,left);
+          
+          if(loop->rest != NULL){
+            startNewBranch(loop->rest,right);
+            addToEnd(loop->rest,left);
+          }
+        }
+        else if(type == 1 && follow == 0){
+          if(current->tail != NULL){ 
+           follow = 1;
+          }
+          startNewBranch(loop,right);
+          addToEnd(loop,left);
+        }
+
+      }
+    }
+    
+    current = current->tail;
+    }
+    loop = loop->rest;
+  }
+}
 
 
 int closed(struct tableau *t) {
-  return(2);}
+
+  struct tableau *loop = t;
+
+  int open = 0;
+
+  while(loop != NULL){
+    
+    char* equation = "";
+          
+    struct set *current = loop->S; 
+
+    int np = 0;
+    int p = 0;
+    int nq = 0;
+    int q = 0;
+    int nr = 0;
+    int r = 0;
+
+    while(current != NULL){
+      
+      char * temp = current->item;
+
+      if(strcmp(temp,"r") == 0){
+        r++;
+      } 
+      else if(strcmp(temp,"q") == 0){
+        q++;
+      }
+      else if(strcmp(temp,"p") == 0){
+        p++;
+      }
+      else if (strcmp(temp,"-r") == 0){
+        nr++;
+      }
+      else if (strcmp(temp,"-q") == 0){
+        nq++;
+      }
+      else if (strcmp(temp,"-p") == 0){
+        np++;
+      }
+      
+      //printf("p:%d np:%d q:%d nq:%d r:%d qr:%d\n",p,np,q,nq,r,nr);
+
+      current = current->tail;
+    } 
+
+    //printf("p:%d np:%d q:%d nq:%d r:%d qr:%d\n",p,np,q,nq,r,nr);
+
+    if((np == 0 && p == 0 || np != p) && (nq == 0 && q ==0 || nq != q) && (nr == 0 && r ==0 || nr != r)){
+      open++;
+    }    
+    
+    loop = loop->rest;
+  }
+
+  if(open == 0){
+    return 1;
+  }
+  else{
+    return 0;
+  }
+}
 /*You should not need to alter the program below.*/
 int main()
 
@@ -380,6 +593,7 @@ int main()
 
 
   char *name = malloc(Fsize);
+
   FILE *fp, *fpout;
 
  
