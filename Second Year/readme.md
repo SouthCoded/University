@@ -1,5 +1,5 @@
 # University
-Code for UCL first year courses
+Code for UCL second year courses
 
 - Term 1
   - Logic and Database Theory
