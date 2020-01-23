@@ -1,0 +1,20 @@
+1 ------------- string check
+When I get angry, Mr. Bigglesworth gets upset.
+
+2 ------------- math thing, multiples of 2
+
+1 2 4 8 16 32
+
+3 --------------- input check
+3 w 972
+
+4 --------------- no idea
+
+2 1
+
+5 ----------------- string length 6, has to equal 0x32
+
+patch explode_bomb
+always breakpoint explode_bomb
+
+Secret answer was 99

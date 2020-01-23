@@ -1,0 +1,53 @@
+def switch_1(arg):
+	switcher = {
+		0x24: 0x8,
+		0x8: 0x6,
+		0x32: 0x2d,
+		0x16:0x14,
+		0x2d: 0x28,
+		0x6: 0x1,
+		0x6b:0x63
+	}
+	return switcher.get(arg,0x0)
+
+
+def switch_2(arg):
+	switcher = {
+		0x24: 0x32,
+		0x8: 0x16,
+		0x32: 0x6b,
+		0x16: 0x23,
+		0x2d: 0x2f,
+		0x6: 0x7,
+		0x6b: 0x3e9,		
+	}
+	return switcher.get(arg,0x0)
+
+
+def looper(a, b):
+	#print(a,b)
+	if a == 0x0:
+		var2 = 0xffffffff
+
+	else:
+		if a > b:
+			var1 = looper(switch_1(a), b)
+			var2 = var1*2
+
+		else:
+			var2 = 0
+			if a != b:
+				var1 = looper(switch_2(a), b)
+				var2 = (var1*2)+1
+
+	return var2
+
+
+for x in range(0,1000):
+
+	result = looper(0x24, x & 0xffffffff)
+	if hex(result) == 0x3:
+		print(x)
+	
+	print(x,hex(result))
+
