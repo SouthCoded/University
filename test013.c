@@ -12,6 +12,11 @@ int main() {
   memcpy(p, data, 10);
   p = (char *)realloc(p, 12);
   assert(p != NULL);
+  // if(p != NULL){
+  //  for(int i=0; i < 5;i++){
+  //    printf("%d here",*((char*)p+i));
+  //  }
+  // }
   assert(memcmp(data, p, 10) == 0);
   p = (char *)realloc(p, 0);
   assert(p == NULL);

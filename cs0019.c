@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define metadata_size sizeof(size_t)
+#define metadata_size sizeof(size_t) //8 bytes
 
 int total_malloc = 0;
 int total_size = 0;
@@ -14,8 +14,8 @@ int activeAlloc = 0;
 int activeAlloc_size = 0;
 int failed = 0;
 int failed_size = 0;
-char* heap_min = 0xfffffffffffffffff;
-char* heap_max = 0x00000000000000000;
+char* heap_min = (char*) 0xfffffffffffff;
+char* heap_max = (char*) 0x0000000000000;
 struct node* head = NULL; 
 
 struct metadata 
@@ -50,10 +50,15 @@ void *cs0019_malloc(size_t sz, const char *file, int line) {
     struct metadata data = {sz};
 
     //Creates a metadata pointer that points to the base_malloc
-    struct metadata *base = base_malloc(metadata_size + sz);
+    char* base = (char*) base_malloc(metadata_size + sz);
 
     //Dereferences that pointer and sets to value of data
-    *base = data;
+    struct metadata *ptr_metadata = (struct metadata *) base; 
+    *ptr_metadata = data;
+
+    //printf("Pointer malloc = %p\n",ptr_metadata);
+    //printf("Pointer malloc = %p\n",base + metadata_size);
+
 
     total_malloc += 1;
     activeAlloc += 1;
@@ -77,7 +82,7 @@ void *cs0019_malloc(size_t sz, const char *file, int line) {
 
     // if(head == NULL){
     //   head = (struct node*)malloc(sizeof(struct node)); 
-    //   head->data = (base + metadata_size);
+    //   head->data = (int) (base + metadata_size);
     // }
     // else{
     //   struct node *traverse = head; 
@@ -87,12 +92,13 @@ void *cs0019_malloc(size_t sz, const char *file, int line) {
     //   }
       
     //   struct node *temp = (struct node*)malloc(sizeof(struct node));
-    //   temp->data = (base + metadata_size);
+    //   temp->data = (int) (base + metadata_size);
     //   traverse->next = temp;
 
     // }
 
     //Returns a pointer to the original place
+
     return (base + metadata_size);
   }
  
@@ -107,6 +113,7 @@ void *cs0019_malloc(size_t sz, const char *file, int line) {
 
 void cs0019_free(void *ptr, const char *file, int line) {
   (void)file, (void)line; // avoid uninitialized variable warnings
+
   // Your code here.
   if (ptr != NULL){
     // int not_found = 0;
@@ -123,17 +130,26 @@ void cs0019_free(void *ptr, const char *file, int line) {
     // if(not_found){
     //   printf("MEMORY BUG: test017.c:9: invalid free of pointer %p", ptr);
     // }
-    if(ptr < heap_min || ptr > heap_max){
+    if((char*) ptr < heap_min || (char *)ptr > heap_max){
       printf("MEMORY BUG: test017.c:9: invalid free of pointer %p, not in heap\n", ptr);
     }
     else{
+
+
       //Creates a metadata pointer
-      struct metadata *new_ptr = ptr; 
+      char* new_ptr =  ptr; 
+      //printf("Pointer new_ptr = %p\n",new_ptr);
 
       new_ptr = new_ptr - metadata_size;
+
+      //printf("Pointer new_ptr = %p\n",new_ptr);
+
+      struct metadata *ptr_metadata = (struct metadata *) new_ptr; 
       
       //Dereferences that pointer
-      size_t alloc_size = new_ptr->size;
+      size_t alloc_size = ptr_metadata->size;
+
+      //printf("%d : this is alloc_size\n",alloc_size);
 
       activeAlloc -= 1;
       activeAlloc_size -= alloc_size;
@@ -164,7 +180,14 @@ void cs0019_free(void *ptr, const char *file, int line) {
 ///    location `file`:`line`.
 
 void *cs0019_realloc(void *ptr, size_t sz, const char *file, int line) {
+  
   void *new_ptr = NULL;
+
+  // if(ptr != NULL){
+  //  for(int i=0; i < 5;i++){
+  //    printf("%d here",*((char*)ptr+i));
+  //  }
+  // }
 
   if (sz) {
     //If there is a size then mallocs 
@@ -178,11 +201,13 @@ void *cs0019_realloc(void *ptr, size_t sz, const char *file, int line) {
   // Your code here (to fix test014).
 
 
-    struct metadata *temp_ptr = (char* ) ptr;
+    char* temp_ptr = (char* ) ptr;
     temp_ptr = temp_ptr - metadata_size;
 
+
+    struct metadata *ptr_metadata = (struct metadata *) temp_ptr; 
     //Dereferences that pointer
-    size_t alloc_size = temp_ptr->size;
+    size_t alloc_size = ptr_metadata->size;
     
 
     //Copies from old pointer to the new pointer
