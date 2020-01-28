@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define metadata_size sizeof(size_t) //8 bytes
+#define metadata_size sizeof(size_t)+sizeof(size_t)+sizeof(size_t)//24 dec
 
 int total_malloc = 0;
 int total_size = 0;
@@ -17,14 +17,17 @@ int failed_size = 0;
 char* heap_min = (char*) 0xfffffffffffff;
 char* heap_max = (char*) 0x0000000000000;
 struct node* head = NULL; 
+struct node* tail = NULL;
 
 struct metadata 
 { 
-   size_t size; 
+   size_t size;
+   const char* file;
+   int line; 
 };
 
 struct node { 
-    int data; 
+    char* data; 
     struct node* next; 
 }; 
 
@@ -38,7 +41,6 @@ struct node {
 void *cs0019_malloc(size_t sz, const char *file, int line) {
   (void)file, (void)line; // avoid uninitialized variable warnings
   // Your code here.
-
   //If it fails
   if(sz >= (size_t)-1 - 150){
     failed += 1;
@@ -46,19 +48,16 @@ void *cs0019_malloc(size_t sz, const char *file, int line) {
     return NULL;
   }
   else{
+
     //Initialize structure
-    struct metadata data = {sz};
+    struct metadata data = {sz,file,line};
 
     //Creates a metadata pointer that points to the base_malloc
-    char* base = (char*) base_malloc(metadata_size + sz);
+    char* base = (char*) base_malloc(metadata_size + sz + 4);
 
     //Dereferences that pointer and sets to value of data
     struct metadata *ptr_metadata = (struct metadata *) base; 
     *ptr_metadata = data;
-
-    //printf("Pointer malloc = %p\n",ptr_metadata);
-    //printf("Pointer malloc = %p\n",base + metadata_size);
-
 
     total_malloc += 1;
     activeAlloc += 1;
@@ -79,30 +78,34 @@ void *cs0019_malloc(size_t sz, const char *file, int line) {
       heap_max = base + metadata_size + sz;
     }
 
+    //Setting up linked list
+    if(head == NULL){
+      head = (struct node*)malloc(sizeof(struct node)); 
+      head->data = base + metadata_size;
+      tail = head;
+    
+    }
+    else{
 
-    // if(head == NULL){
-    //   head = (struct node*)malloc(sizeof(struct node)); 
-    //   head->data = (int) (base + metadata_size);
-    // }
-    // else{
-    //   struct node *traverse = head; 
-    //   //finds the last element
-    //   while (traverse->next != NULL) { 
-    //     traverse = traverse->next;
-    //   }
-      
-    //   struct node *temp = (struct node*)malloc(sizeof(struct node));
-    //   temp->data = (int) (base + metadata_size);
-    //   traverse->next = temp;
+      struct node* traverse = tail;
 
-    // }
+      struct node *temp = (struct node*)malloc(sizeof(struct node));
+      temp->data = base + metadata_size;
+      traverse->next = temp;
 
+      tail = temp;
+    }
+
+    int* canary = (int*)(base+metadata_size+sz);
+
+    *canary = 0xAAAA;
+
+    //printf("%p metadata\n",base);
+    //printf("%p malloc\n",base + metadata_size);
     //Returns a pointer to the original place
-
     return (base + metadata_size);
   }
  
-  return base_malloc(sz);
 }
 
 /// cs0019_free(ptr, file, line)
@@ -116,57 +119,155 @@ void cs0019_free(void *ptr, const char *file, int line) {
 
   // Your code here.
   if (ptr != NULL){
-    // int not_found = 0;
-
-    // //Makes sure ptr is freeable else exits
-    // struct node *checker = head; 
-    // while (checker != NULL) { 
-    //   checker = checker->next;
-    //   if(checker == ptr){
-    //     not_found = 1;
-    //   }
-    // }
-
-    // if(not_found){
-    //   printf("MEMORY BUG: test017.c:9: invalid free of pointer %p", ptr);
-    // }
+  
     if((char*) ptr < heap_min || (char *)ptr > heap_max){
-      printf("MEMORY BUG: test017.c:9: invalid free of pointer %p, not in heap\n", ptr);
+      printf("MEMORY BUG: %s:%d: invalid free of pointer %p, not in heap\n",file,line,ptr);
     }
     else{
 
+      int not_found = 1;
 
-      //Creates a metadata pointer
-      char* new_ptr =  ptr; 
-      //printf("Pointer new_ptr = %p\n",new_ptr);
+      //Makes sure ptr exists in linkedlist
+      struct node *checker = head;   
 
-      new_ptr = new_ptr - metadata_size;
+      while (checker != NULL) { 
+        if(checker->data == ptr){
+          not_found = 0;
+        }
+        checker = checker->next;
+      }
 
-      //printf("Pointer new_ptr = %p\n",new_ptr);
+      if(not_found){
+        printf("MEMORY BUG: %s:%d: invalid free of pointer %p, not allocated\n",file,line,ptr);
 
-      struct metadata *ptr_metadata = (struct metadata *) new_ptr; 
+        struct node *traverse = head; 
+
+        while (traverse != NULL) { 
+          //Creates a metadata pointer
+          char* new_ptr =  traverse->data; 
+          new_ptr = new_ptr - 0x18;  
+          struct metadata *ptr_metadata = (struct metadata *) new_ptr; 
+          //Dereferences that pointer
+          size_t alloc_size = ptr_metadata->size;
+
+          if((char*) ptr < (new_ptr+alloc_size) && (char*) ptr > new_ptr){
+            int difference = (char*) ptr - traverse->data;
+
+            printf("  %s:%d: %p is %d bytes inside a %ld byte region allocated here\n",file,line-1,ptr,difference,alloc_size);
+          }          
+          traverse = traverse->next;
+
+        }
+      } 
+      else{
+
+        //Creates a metadata pointer
+        char* new_ptr =  ptr; 
+        
+        //printf("Pointer ptr = %p\n",ptr);
+
+        new_ptr = new_ptr - 0x18;  
+
+        //printf("Pointer new_ptr = %p\n",new_ptr);
+
+        struct metadata *ptr_metadata = (struct metadata *) new_ptr; 
       
-      //Dereferences that pointer
-      size_t alloc_size = ptr_metadata->size;
+        //Dereferences that pointer
+        size_t alloc_size = ptr_metadata->size;
 
-      //printf("%d : this is alloc_size\n",alloc_size);
+        if(*((int*)(ptr+alloc_size)) != 0xAAAA){
+          printf("MEMORY BUG: %s:%d: detected wild write during free of pointer %p\n",file,line,ptr);
+        }
 
-      activeAlloc -= 1;
-      activeAlloc_size -= alloc_size;
+        activeAlloc -= 1;
+        activeAlloc_size -= alloc_size;
 
-      // //Goes through until it finds the node before the one we want to remove
-      // struct node *traverse = head; 
-      // while (traverse->next != ptr) { 
-      //   traverse = traverse->next;
-      // }
+        struct node* new_head = NULL; 
+        struct node* new_tail = NULL;
+
+        //If head is the one that contains the data
+        if(head->data == ptr){
+          if(head->next != NULL){
+            //Create the new head
+            new_head = (struct node*)malloc(sizeof(struct node));
+
+            //Get the next node
+            struct node *nexter = head->next;
+
+            //Transfer data to the new head
+            new_head->data = nexter->data;
+
+            struct node *traverse = (head->next)->next; 
+
+            //Goes through rest of the list to copy
+            while (traverse != NULL) { 
+              //New_head already created so we need a node to cycle through new_head until it is null
+              struct node *cycle = new_head;
+
+              while (cycle->next != NULL) {
+                cycle = cycle->next;
+              }
+              
+              //Now cycle contains the last node
+              //Create a node to add onto the end of our new linked list
+              struct node *temp = (struct node*)malloc(sizeof(struct node));
+              temp->data = traverse->data;
+              cycle->next = temp;
+
+              new_tail = temp;
+              
+              traverse = traverse->next;
+            }
+            
+          }
+          else{
+            head = NULL;
+            new_tail = NULL;
+          }
+        }
+        else{
+
+          //Goes through the entire linked list
+          struct node *traverse = head; 
+
+          while (traverse != NULL) { 
+
+            //If new_head isn't created yet, we create it - won't have the data in the head as checked before 
+            if(new_head == NULL){
+                new_head = (struct node*)malloc(sizeof(struct node));
+                new_head->data = traverse->data;
+            }
+            else{
+
+              //New_head already created so we need a node to cycle through new_head until it is null
+              struct node *cycle = new_head;
+
+              while (cycle->next != NULL) {
+                cycle = cycle->next;
+              }
+
+              if(traverse->data != ptr){
+                //Now cycle contains the last node
+                //Create a node to add onto the end of our new linked list
+                struct node *temp = (struct node*)malloc(sizeof(struct node));
+                temp->data = traverse->data;
+                cycle->next = temp;
+
+                new_tail = temp;
+              }
+            }
+            traverse = traverse->next;
+          }
+        }
+
+        head = new_head;
+        tail = new_tail;
+
+        base_free(ptr);
+
+      }
+
       
-
-      // struct node *temp = (struct node*)malloc(sizeof(struct node));
-      // temp = traverse->next;
-
-      // //Sets the next one to skip
-      // traverse->next = temp->next;
-      base_free(ptr);
     }
   }
   
@@ -183,15 +284,39 @@ void *cs0019_realloc(void *ptr, size_t sz, const char *file, int line) {
   
   void *new_ptr = NULL;
 
-  // if(ptr != NULL){
-  //  for(int i=0; i < 5;i++){
-  //    printf("%d here",*((char*)ptr+i));
-  //  }
-  // }
+  if(ptr != NULL){
+   if(((char*) ptr < heap_min || (char *)ptr > heap_max)){
+        printf("MEMORY BUG: %s:%d: invalid free of pointer %p, not in heap\n",file,line,ptr);
+        return NULL;
+    }
+    else{
+
+      int not_found = 1;
+
+      //Makes sure ptr exists in linkedlist
+      struct node *checker = head;   
+
+      while (checker != NULL) { 
+        if(checker->data == ptr){
+          not_found = 0;
+        }
+        checker = checker->next;
+      }
+
+      if(not_found){
+        printf("MEMORY BUG: %s:%d: invalid free of pointer %p, not allocated\n",file,line,ptr);
+        return NULL;
+      } 
+
+    }
+  }
+ 
 
   if (sz) {
     //If there is a size then mallocs 
     new_ptr = cs0019_malloc(sz, file, line);
+
+
   }
 
   //A realloc where a new size is needed
@@ -202,16 +327,25 @@ void *cs0019_realloc(void *ptr, size_t sz, const char *file, int line) {
 
 
     char* temp_ptr = (char* ) ptr;
-    temp_ptr = temp_ptr - metadata_size;
+    temp_ptr = temp_ptr - 0x18;
 
 
     struct metadata *ptr_metadata = (struct metadata *) temp_ptr; 
     //Dereferences that pointer
     size_t alloc_size = ptr_metadata->size;
     
-
+    if(alloc_size > sz){
+      memcpy(new_ptr,ptr,sz);
+    }
+    else{
+       memcpy(new_ptr,ptr,alloc_size);
+    }
     //Copies from old pointer to the new pointer
-    memcpy(new_ptr,ptr,alloc_size);
+   
+
+    //printf("Check found %p\n",(new_ptr+alloc_size));
+    //printf("%x\n", *((int*)(new_ptr+alloc_size)));
+
     
   }
 
@@ -281,6 +415,38 @@ void cs0019_printstatistics(void) {
 
 void cs0019_printleakreport(void) {
 // Your code here.
+  
+  if(head != NULL){
+
+    struct node *traverse = head;   
+
+      while (traverse != NULL) { 
+
+        //Creates a metadata pointer
+        char* new_ptr =  traverse->data; 
+        //printf("Pointer new_ptr = %p\n",new_ptr);
+
+        new_ptr = new_ptr - 0x18;  
+
+        //printf("Pointer new_ptr = %p\n",new_ptr);
+
+        struct metadata *ptr_metadata = (struct metadata *) new_ptr; 
+      
+        //Dereferences that pointer
+        size_t alloc_size = ptr_metadata->size;
+        const char* file = ptr_metadata->file;
+        int line = ptr_metadata->line;
+
+        printf("LEAK CHECK: %s:%d: allocated object %p with size %ld\n",file,line,traverse->data,alloc_size);
+       
+        traverse = traverse->next;
+      }
+
+    
+
+  }
+
+
 }
 
 /// cs0019_printheavyhitterreport()
