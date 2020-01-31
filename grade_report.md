@@ -1,13 +1,20 @@
 ## COMP0019 CW2 Grade Report
-Graded at: 2020-01-28 15:14:10.953531
+Graded at: 2020-01-31 16:39:11.035488
 
-Report for commit SHA: 50a59c57f5e0fbc7e8fc0928e025146893a084f8
+Report for commit SHA: 696af5876dee8b9b53efd5ef6364895aec5f9447
 
 ### Output
 
 
     CLEAN 
       COMPILE cs0019.c
+    cs0019.c: In function ‘cs0019_printheavyhitterreport’:
+    cs0019.c:477:12: warning: unused variable ‘alloc_size’ [-Wunused-variable]
+         size_t alloc_size = ptr_metadata->size;
+                ^
+    cs0019.c:464:16: warning: unused variable ‘counter_list’ [-Wunused-variable]
+       struct node* counter_list = NULL; 
+                    ^
       COMPILE basealloc.c
       COMPILE test001.c
       LINK test001 
@@ -129,66 +136,23 @@ Report for commit SHA: 50a59c57f5e0fbc7e8fc0928e025146893a084f8
     All tests passed!
     make: 'hhtest' is up to date.
     ./hhtest 0
-    *** Error in `./hhtest': free(): invalid pointer: 0x0000000001df1028 ***
-    ======= Backtrace: =========
-    /lib/x86_64-linux-gnu/libc.so.6(+0x777e5)[0x7fd4eadc07e5]
-    /lib/x86_64-linux-gnu/libc.so.6(+0x8037a)[0x7fd4eadc937a]
-    /lib/x86_64-linux-gnu/libc.so.6(cfree+0x4c)[0x7fd4eadcd53c]
-    ./hhtest[0x40164a]
-    ./hhtest[0x400ab1]
-    /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xf0)[0x7fd4ead69830]
-    ./hhtest[0x400b89]
-    ======= Memory map: ========
-    00400000-00403000 r-xp 00000000 08:01 422594                             /home/user/hhtest
-    00603000-00604000 r--p 00003000 08:01 422594                             /home/user/hhtest
-    00604000-00605000 rw-p 00004000 08:01 422594                             /home/user/hhtest
-    01df1000-01e12000 rw-p 00000000 00:00 0                                  [heap]
-    7fd4e4000000-7fd4e4021000 rw-p 00000000 00:00 0 
-    7fd4e4021000-7fd4e8000000 ---p 00000000 00:00 0 
-    7fd4eab33000-7fd4eab49000 r-xp 00000000 08:01 536                        /lib/x86_64-linux-gnu/libgcc_s.so.1
-    7fd4eab49000-7fd4ead48000 ---p 00016000 08:01 536                        /lib/x86_64-linux-gnu/libgcc_s.so.1
-    7fd4ead48000-7fd4ead49000 rw-p 00015000 08:01 536                        /lib/x86_64-linux-gnu/libgcc_s.so.1
-    7fd4ead49000-7fd4eaf09000 r-xp 00000000 08:01 510                        /lib/x86_64-linux-gnu/libc-2.23.so
-    7fd4eaf09000-7fd4eb109000 ---p 001c0000 08:01 510                        /lib/x86_64-linux-gnu/libc-2.23.so
-    7fd4eb109000-7fd4eb10d000 r--p 001c0000 08:01 510                        /lib/x86_64-linux-gnu/libc-2.23.so
-    7fd4eb10d000-7fd4eb10f000 rw-p 001c4000 08:01 510                        /lib/x86_64-linux-gnu/libc-2.23.so
-    7fd4eb10f000-7fd4eb113000 rw-p 00000000 00:00 0 
-    7fd4eb113000-7fd4eb21b000 r-xp 00000000 08:01 551                        /lib/x86_64-linux-gnu/libm-2.23.so
-    7fd4eb21b000-7fd4eb41a000 ---p 00108000 08:01 551                        /lib/x86_64-linux-gnu/libm-2.23.so
-    7fd4eb41a000-7fd4eb41b000 r--p 00107000 08:01 551                        /lib/x86_64-linux-gnu/libm-2.23.so
-    7fd4eb41b000-7fd4eb41c000 rw-p 00108000 08:01 551                        /lib/x86_64-linux-gnu/libm-2.23.so
-    7fd4eb41c000-7fd4eb442000 r-xp 00000000 08:01 486                        /lib/x86_64-linux-gnu/ld-2.23.so
-    7fd4eb62f000-7fd4eb632000 rw-p 00000000 00:00 0 
-    7fd4eb63e000-7fd4eb641000 rw-p 00000000 00:00 0 
-    7fd4eb641000-7fd4eb642000 r--p 00025000 08:01 486                        /lib/x86_64-linux-gnu/ld-2.23.so
-    7fd4eb642000-7fd4eb643000 rw-p 00026000 08:01 486                        /lib/x86_64-linux-gnu/ld-2.23.so
-    7fd4eb643000-7fd4eb644000 rw-p 00000000 00:00 0 
-    7fff0a16f000-7fff0a190000 rw-p 00000000 00:00 0                          [stack]
-    7fff0a1c8000-7fff0a1ca000 r--p 00000000 00:00 0                          [vvar]
-    7fff0a1ca000-7fff0a1cc000 r-xp 00000000 00:00 0                          [vdso]
-    ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
-    timeout: the monitored command dumped core
-    Aborted
+    This is working
     
     ========================
     ./hhtest 1
-    Segmentation fault
-    timeout: the monitored command dumped core
+    This is working
     
     ========================
     ./hhtest 0.4
-    Segmentation fault
-    timeout: the monitored command dumped core
+    This is working
     
     ========================
     ./hhtest -0.4
-    Segmentation fault
-    timeout: the monitored command dumped core
+    This is working
     
     ========================
     ./hhtest -l
-    Segmentation fault
-    timeout: the monitored command dumped core
+    This is working
     hhtests complete. Check the results to see if they look OK.
     
 
