@@ -82,6 +82,7 @@ void *cs0019_malloc(size_t sz, const char *file, int line) {
     if(head == NULL){
       head = (struct node*)malloc(sizeof(struct node)); 
       head->data = base + metadata_size;
+      head->next = NULL;
       tail = head;
     
     }
@@ -90,6 +91,7 @@ void *cs0019_malloc(size_t sz, const char *file, int line) {
       struct node* traverse = tail;
 
       struct node *temp = (struct node*)malloc(sizeof(struct node));
+      temp->next = NULL;
       temp->data = base + metadata_size;
       traverse->next = temp;
 
@@ -113,13 +115,12 @@ void *cs0019_malloc(size_t sz, const char *file, int line) {
 ///    returned by a previous call to cs0019_malloc and friends. If
 ///    `ptr == NULL`, does nothing. The free was called at location
 ///    `file`:`line`.
-
+int x = 0;
 void cs0019_free(void *ptr, const char *file, int line) {
   (void)file, (void)line; // avoid uninitialized variable warnings
 
   // Your code here.
   if (ptr != NULL){
-  
     if((char*) ptr < heap_min || (char *)ptr > heap_max){
       printf("MEMORY BUG: %s:%d: invalid free of pointer %p, not in heap\n",file,line,ptr);
     }
@@ -152,7 +153,6 @@ void cs0019_free(void *ptr, const char *file, int line) {
 
           if((char*) ptr < (new_ptr+alloc_size) && (char*) ptr > new_ptr){
             int difference = (char*) ptr - traverse->data;
-
             printf("  %s:%d: %p is %d bytes inside a %ld byte region allocated here\n",file,line-1,ptr,difference,alloc_size);
           }          
           traverse = traverse->next;
@@ -164,11 +164,7 @@ void cs0019_free(void *ptr, const char *file, int line) {
         //Creates a metadata pointer
         char* new_ptr =  ptr; 
         
-        //printf("Pointer ptr = %p\n",ptr);
-
         new_ptr = new_ptr - 0x18;  
-
-        //printf("Pointer new_ptr = %p\n",new_ptr);
 
         struct metadata *ptr_metadata = (struct metadata *) new_ptr; 
       
@@ -184,12 +180,15 @@ void cs0019_free(void *ptr, const char *file, int line) {
 
         struct node* new_head = NULL; 
         struct node* new_tail = NULL;
+   
 
         //If head is the one that contains the data
         if(head->data == ptr){
           if(head->next != NULL){
             //Create the new head
             new_head = (struct node*)malloc(sizeof(struct node));
+            new_head->next = NULL;
+            new_head->data = NULL;
 
             //Get the next node
             struct node *nexter = head->next;
@@ -197,8 +196,7 @@ void cs0019_free(void *ptr, const char *file, int line) {
             //Transfer data to the new head
             new_head->data = nexter->data;
 
-            struct node *traverse = (head->next)->next; 
-
+            struct node *traverse = nexter->next; 
             //Goes through rest of the list to copy
             while (traverse != NULL) { 
               //New_head already created so we need a node to cycle through new_head until it is null
@@ -212,6 +210,7 @@ void cs0019_free(void *ptr, const char *file, int line) {
               //Create a node to add onto the end of our new linked list
               struct node *temp = (struct node*)malloc(sizeof(struct node));
               temp->data = traverse->data;
+              temp->next = NULL;
               cycle->next = temp;
 
               new_tail = temp;
@@ -221,6 +220,7 @@ void cs0019_free(void *ptr, const char *file, int line) {
             
           }
           else{
+            //Resets if head is the only data
             head = NULL;
             new_tail = NULL;
           }
@@ -236,12 +236,14 @@ void cs0019_free(void *ptr, const char *file, int line) {
             if(new_head == NULL){
                 new_head = (struct node*)malloc(sizeof(struct node));
                 new_head->data = traverse->data;
+                new_head->next = NULL;
+                new_tail = new_head;
             }
-            else{
-
+            else{              
+              
               //New_head already created so we need a node to cycle through new_head until it is null
               struct node *cycle = new_head;
-
+              
               while (cycle->next != NULL) {
                 cycle = cycle->next;
               }
@@ -251,6 +253,7 @@ void cs0019_free(void *ptr, const char *file, int line) {
                 //Create a node to add onto the end of our new linked list
                 struct node *temp = (struct node*)malloc(sizeof(struct node));
                 temp->data = traverse->data;
+                temp->next = NULL;
                 cycle->next = temp;
 
                 new_tail = temp;
@@ -263,7 +266,8 @@ void cs0019_free(void *ptr, const char *file, int line) {
         head = new_head;
         tail = new_tail;
 
-        base_free(ptr);
+
+        base_free(new_ptr);
 
       }
 
@@ -455,4 +459,29 @@ void cs0019_printleakreport(void) {
 
 void cs0019_printheavyhitterreport(void) {
 // Your code here.
+
+  printf("This is working\n");
+  struct node* counter_list = NULL; 
+
+  struct node *traverse = head;   
+
+  while (traverse != NULL) { 
+    //Creates a metadata pointer
+    char* new_ptr =  traverse->data; 
+
+    new_ptr = new_ptr - 0x18;  
+
+    struct metadata *ptr_metadata = (struct metadata *) new_ptr; 
+      
+    //Dereferences that pointer
+    size_t alloc_size = ptr_metadata->size;
+    char* file = (char*) ptr_metadata->file;
+    //char* line = (char*) ptr_metadata->line;
+
+    //strcat(file,line);
+
+    printf("%s",file);
+
+    traverse = traverse->next;
+  }
 }
