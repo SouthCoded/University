@@ -9,7 +9,7 @@
 #define metadata_size sizeof(size_t)+sizeof(size_t)+sizeof(size_t)//24 dec
 
 int total_malloc = 0;
-int total_size = 0;
+size_t total_size = 0;
 int activeAlloc = 0;
 int activeAlloc_size = 0;
 int failed = 0;
@@ -18,6 +18,9 @@ char* heap_min = (char*) 0xfffffffffffff;
 char* heap_max = (char*) 0x0000000000000;
 struct node* head = NULL; 
 struct node* tail = NULL;
+
+struct TM_node* TM_head = NULL;
+struct TM_node* TM_tail = NULL;
 
 struct metadata 
 { 
@@ -31,6 +34,11 @@ struct node {
     struct node* next; 
 }; 
 
+
+struct TM_node { 
+    struct metadata data; 
+    struct TM_node* next; 
+}; 
 
 /// cs0019_malloc(sz, file, line)
 ///    Return a pointer to `sz` bytes of newly-allocated dynamic memory.
@@ -84,18 +92,33 @@ void *cs0019_malloc(size_t sz, const char *file, int line) {
       head->data = base + metadata_size;
       head->next = NULL;
       tail = head;
-    
     }
     else{
-
       struct node* traverse = tail;
-
       struct node *temp = (struct node*)malloc(sizeof(struct node));
       temp->next = NULL;
       temp->data = base + metadata_size;
       traverse->next = temp;
-
       tail = temp;
+    }
+
+    if(TM_head == NULL){
+
+      TM_head = (struct TM_node*)malloc(sizeof(struct TM_node));
+      TM_head->data = data;
+      TM_head->next = NULL; 
+      TM_tail = TM_head;
+    }
+    else{
+      struct TM_node* TM_traverse = TM_tail;
+      struct TM_node *TM_temp = (struct TM_node*)malloc(sizeof(struct TM_node));
+      TM_temp->next = NULL;
+      TM_temp->data = data;
+      
+      TM_traverse->next = TM_temp;
+
+      TM_tail = TM_temp;
+
     }
 
     int* canary = (int*)(base+metadata_size+sz);
@@ -115,7 +138,6 @@ void *cs0019_malloc(size_t sz, const char *file, int line) {
 ///    returned by a previous call to cs0019_malloc and friends. If
 ///    `ptr == NULL`, does nothing. The free was called at location
 ///    `file`:`line`.
-int x = 0;
 void cs0019_free(void *ptr, const char *file, int line) {
   (void)file, (void)line; // avoid uninitialized variable warnings
 
@@ -461,27 +483,57 @@ void cs0019_printheavyhitterreport(void) {
 // Your code here.
 
   printf("This is working\n");
-  struct node* counter_list = NULL; 
 
-  struct node *traverse = head;   
+  struct TM_node *TM_traverse = TM_head;   
+
+  struct TM_node *traverse = TM_head;
+
+  struct metadata array[10000] = {{0,"",0}};
 
   while (traverse != NULL) { 
-    //Creates a metadata pointer
-    char* new_ptr =  traverse->data; 
 
-    new_ptr = new_ptr - 0x18;  
+    //Get data from the linked list of the line and size of malloc
+    int new_line = traverse->data.line;
+    size_t new_size = traverse->data.size;
 
-    struct metadata *ptr_metadata = (struct metadata *) new_ptr; 
-      
-    //Dereferences that pointer
-    size_t alloc_size = ptr_metadata->size;
-    char* file = (char*) ptr_metadata->file;
-    //char* line = (char*) ptr_metadata->line;
+    int random = rand();
 
-    //strcat(file,line);
+    if(array[new_line].line == 0 && random % 20 == 0){
+      struct metadata new_data = {new_size,traverse->data.file,traverse->data.line};
 
-    printf("%s",file);
+      array[new_line] = new_data;
+    }
+    else{
+      struct metadata new_data = array[new_line];
 
+      new_data.size += new_size;
+      array[new_line] = new_data;
+    }
     traverse = traverse->next;
   }
+
+
+  for(int x = 0;x < 10000; x++){
+    for(int y = x+1; y < 10000; y++){
+       if(array[x].size < array[y].size){
+          struct metadata temp = array[x];
+          array[x] = array[y];
+          array[y] = temp; 
+        }
+    }
+  }
+
+  for(int x = 0;x < 10000; x++){
+    float percent = ((float)array[x].size/(float)total_size);
+    if(percent > 0.2){
+      printf("HEAVY HITTER: %s:%d: %ld bytes (~%2.1f%)\n",array[x].file,array[x].line,array[x].size,percent*100);
+    }
+  }
+
+     
+
+
+
+  
+
 }
