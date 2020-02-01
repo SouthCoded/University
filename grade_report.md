@@ -1,7 +1,7 @@
 ## COMP0019 CW2 Grade Report
-Graded at: 2020-01-31 16:39:11.035488
+Graded at: 2020-02-01 19:55:43.912961
 
-Report for commit SHA: 696af5876dee8b9b53efd5ef6364895aec5f9447
+Report for commit SHA: 48a5269438cae8eee8d39fa1c36163a90475b617
 
 ### Output
 
@@ -9,12 +9,12 @@ Report for commit SHA: 696af5876dee8b9b53efd5ef6364895aec5f9447
     CLEAN 
       COMPILE cs0019.c
     cs0019.c: In function ‘cs0019_printheavyhitterreport’:
-    cs0019.c:477:12: warning: unused variable ‘alloc_size’ [-Wunused-variable]
-         size_t alloc_size = ptr_metadata->size;
-                ^
-    cs0019.c:464:16: warning: unused variable ‘counter_list’ [-Wunused-variable]
-       struct node* counter_list = NULL; 
-                    ^
+    cs0019.c:529:14: warning: unknown conversion type character ‘)’ in format [-Wformat=]
+           printf("HEAVY HITTER: %s:%d: %ld bytes (~%2.1f%)\n",array[x].file,array[x].line,array[x].size,percent*100);
+                  ^
+    cs0019.c:487:19: warning: unused variable ‘TM_traverse’ [-Wunused-variable]
+       struct TM_node *TM_traverse = TM_head;   
+                       ^
       COMPILE basealloc.c
       COMPILE test001.c
       LINK test001 
@@ -137,10 +137,14 @@ Report for commit SHA: 696af5876dee8b9b53efd5ef6364895aec5f9447
     make: 'hhtest' is up to date.
     ./hhtest 0
     This is working
+    HEAVY HITTER: hhtest.c:169: 1639710720 bytes (~50.1%)
+    HEAVY HITTER: hhtest.c:165: 811663360 bytes (~24.8%)
     
     ========================
     ./hhtest 1
     This is working
+    HEAVY HITTER: hhtest.c:13: 500773 bytes (~50.1%)
+    HEAVY HITTER: hhtest.c:17: 249744 bytes (~25.0%)
     
     ========================
     ./hhtest 0.4
@@ -149,17 +153,20 @@ Report for commit SHA: 696af5876dee8b9b53efd5ef6364895aec5f9447
     ========================
     ./hhtest -0.4
     This is working
+    HEAVY HITTER: hhtest.c:169: 15835594752 bytes (~62.1%)
+    HEAVY HITTER: hhtest.c:165: 6000738304 bytes (~23.5%)
     
     ========================
     ./hhtest -l
-    This is working
+    timeout: the monitored command dumped core
+    Segmentation fault
     hhtests complete. Check the results to see if they look OK.
     
 
 
 ### Marking
 
-Heavy hitter marks: 0/20
+Heavy hitter marks: 8/20
 
-Total score: (38/38) * 80.0 + 0 = 80/100
+Total score: (38/38) * 80.0 + 8 = 88/100
 
