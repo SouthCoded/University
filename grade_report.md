@@ -1,7 +1,7 @@
 ## COMP0019 CW2 Grade Report
-Graded at: 2020-02-01 19:55:43.912961
+Graded at: 2020-02-02 08:37:44.172022
 
-Report for commit SHA: 48a5269438cae8eee8d39fa1c36163a90475b617
+Report for commit SHA: 6dc4cfac5d72c013bfe61287097fd9975d79a25e
 
 ### Output
 
@@ -9,10 +9,10 @@ Report for commit SHA: 48a5269438cae8eee8d39fa1c36163a90475b617
     CLEAN 
       COMPILE cs0019.c
     cs0019.c: In function ‘cs0019_printheavyhitterreport’:
-    cs0019.c:529:14: warning: unknown conversion type character ‘)’ in format [-Wformat=]
+    cs0019.c:527:14: warning: unknown conversion type character ‘)’ in format [-Wformat=]
            printf("HEAVY HITTER: %s:%d: %ld bytes (~%2.1f%)\n",array[x].file,array[x].line,array[x].size,percent*100);
                   ^
-    cs0019.c:487:19: warning: unused variable ‘TM_traverse’ [-Wunused-variable]
+    cs0019.c:485:19: warning: unused variable ‘TM_traverse’ [-Wunused-variable]
        struct TM_node *TM_traverse = TM_head;   
                        ^
       COMPILE basealloc.c
@@ -136,23 +136,19 @@ Report for commit SHA: 48a5269438cae8eee8d39fa1c36163a90475b617
     All tests passed!
     make: 'hhtest' is up to date.
     ./hhtest 0
-    This is working
     HEAVY HITTER: hhtest.c:169: 1639710720 bytes (~50.1%)
     HEAVY HITTER: hhtest.c:165: 811663360 bytes (~24.8%)
     
     ========================
     ./hhtest 1
-    This is working
     HEAVY HITTER: hhtest.c:13: 500773 bytes (~50.1%)
     HEAVY HITTER: hhtest.c:17: 249744 bytes (~25.0%)
     
     ========================
     ./hhtest 0.4
-    This is working
     
     ========================
     ./hhtest -0.4
-    This is working
     HEAVY HITTER: hhtest.c:169: 15835594752 bytes (~62.1%)
     HEAVY HITTER: hhtest.c:165: 6000738304 bytes (~23.5%)
     
