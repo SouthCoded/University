@@ -1,7 +1,7 @@
 ## COMP0019 CW2 Grade Report
-Graded at: 2020-02-02 08:37:44.172022
+Graded at: 2020-02-02 15:42:33.356568
 
-Report for commit SHA: 6dc4cfac5d72c013bfe61287097fd9975d79a25e
+Report for commit SHA: 9904937dbf6a323cad7d84f329484f35bd12e1d0
 
 ### Output
 
@@ -9,7 +9,7 @@ Report for commit SHA: 6dc4cfac5d72c013bfe61287097fd9975d79a25e
     CLEAN 
       COMPILE cs0019.c
     cs0019.c: In function ‘cs0019_printheavyhitterreport’:
-    cs0019.c:527:14: warning: unknown conversion type character ‘)’ in format [-Wformat=]
+    cs0019.c:533:14: warning: unknown conversion type character ‘)’ in format [-Wformat=]
            printf("HEAVY HITTER: %s:%d: %ld bytes (~%2.1f%)\n",array[x].file,array[x].line,array[x].size,percent*100);
                   ^
     cs0019.c:485:19: warning: unused variable ‘TM_traverse’ [-Wunused-variable]
