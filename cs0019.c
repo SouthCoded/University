@@ -486,39 +486,38 @@ void cs0019_printheavyhitterreport(void) {
 
   struct TM_node *traverse = TM_head;
 
-  struct metadata array[10000] = {{0,"",0}};
+  struct metadata array[100000] = {{0,"",0}};
 
   while (traverse != NULL) { 
 
-    //Get data from the linked list of the line and size of malloc
-    int new_line = traverse->data.line;
-    size_t new_size = traverse->data.size;
-
     int random = rand();
 
-    if(array[new_line].line == 0 && random % 100 == 0){
-      struct metadata new_data = {new_size,traverse->data.file,traverse->data.line};
+    if(random % 100 == 0){
 
-      array[new_line] = new_data;
-    }
-    else{
-      struct metadata new_data = array[new_line];
+      //Get data from the linked list of the line and size of malloc
+      int new_line = traverse->data.line;
+      size_t new_size = traverse->data.size;
+      
+      if(array[new_line].line == 0){
+        struct metadata new_data = {new_size,traverse->data.file,traverse->data.line};
 
-      new_data.size += new_size;
-      array[new_line] = new_data;
+        array[new_line] = new_data;
+      }
+      else{
+        struct metadata new_data = array[new_line];
+
+        new_data.size += new_size;
+        array[new_line] = new_data;
+      }
     }
+
+
+
     traverse = traverse->next;
   }
 
-
-  // for(int x = 0; x < 10000; x++){
-  //   if(array[x].size != 0){
-  //     printf("HEAVY HITTER: %s:%d: %ld bytes\n",array[x].file,array[x].line,array[x].size);
-  //   }
-  // }
-
   for(int x = 0;x < 5; x++){
-    for(int y = x+1; y < 10000; y++){
+    for(int y = x+1; y < 100000; y++){
        if(array[x].size < array[y].size){
           struct metadata temp = array[x];
           array[x] = array[y];
