@@ -482,8 +482,6 @@ void cs0019_printleakreport(void) {
 void cs0019_printheavyhitterreport(void) {
 // Your code here.
 
-  printf("This is working\n");
-
   struct TM_node *TM_traverse = TM_head;   
 
   struct TM_node *traverse = TM_head;
@@ -513,7 +511,7 @@ void cs0019_printheavyhitterreport(void) {
   }
 
 
-  for(int x = 0;x < 10000; x++){
+  for(int x = 0;x < 20; x++){
     for(int y = x+1; y < 10000; y++){
        if(array[x].size < array[y].size){
           struct metadata temp = array[x];
