@@ -496,7 +496,7 @@ void cs0019_printheavyhitterreport(void) {
 
     int random = rand();
 
-    if(array[new_line].line == 0 && random % 20 == 0){
+    if(array[new_line].line == 0 && random % 100 == 0){
       struct metadata new_data = {new_size,traverse->data.file,traverse->data.line};
 
       array[new_line] = new_data;
@@ -511,7 +511,13 @@ void cs0019_printheavyhitterreport(void) {
   }
 
 
-  for(int x = 0;x < 20; x++){
+  // for(int x = 0; x < 10000; x++){
+  //   if(array[x].size != 0){
+  //     printf("HEAVY HITTER: %s:%d: %ld bytes\n",array[x].file,array[x].line,array[x].size);
+  //   }
+  // }
+
+  for(int x = 0;x < 5; x++){
     for(int y = x+1; y < 10000; y++){
        if(array[x].size < array[y].size){
           struct metadata temp = array[x];
@@ -521,7 +527,7 @@ void cs0019_printheavyhitterreport(void) {
     }
   }
 
-  for(int x = 0;x < 10000; x++){
+  for(int x = 0;x < 5; x++){
     float percent = ((float)array[x].size/(float)total_size);
     if(percent > 0.2){
       printf("HEAVY HITTER: %s:%d: %ld bytes (~%2.1f%)\n",array[x].file,array[x].line,array[x].size,percent*100);
