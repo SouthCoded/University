@@ -1,7 +1,7 @@
 ## COMP0019 CW2 Grade Report
-Graded at: 2020-02-02 15:42:33.356568
+Graded at: 2020-02-02 15:59:40.524593
 
-Report for commit SHA: 9904937dbf6a323cad7d84f329484f35bd12e1d0
+Report for commit SHA: 06f74e47a309d5bcf09a964ca4d38c9efa767d9a
 
 ### Output
 
@@ -9,7 +9,7 @@ Report for commit SHA: 9904937dbf6a323cad7d84f329484f35bd12e1d0
     CLEAN 
       COMPILE cs0019.c
     cs0019.c: In function ‘cs0019_printheavyhitterreport’:
-    cs0019.c:533:14: warning: unknown conversion type character ‘)’ in format [-Wformat=]
+    cs0019.c:532:14: warning: unknown conversion type character ‘)’ in format [-Wformat=]
            printf("HEAVY HITTER: %s:%d: %ld bytes (~%2.1f%)\n",array[x].file,array[x].line,array[x].size,percent*100);
                   ^
     cs0019.c:485:19: warning: unused variable ‘TM_traverse’ [-Wunused-variable]
@@ -154,15 +154,15 @@ Report for commit SHA: 9904937dbf6a323cad7d84f329484f35bd12e1d0
     
     ========================
     ./hhtest -l
-    timeout: the monitored command dumped core
-    Segmentation fault
+    HEAVY HITTER: hhtest.c:19064: 419379200 bytes (~53.2%)
+    HEAVY HITTER: hhtest.c:13401: 367667200 bytes (~46.7%)
     hhtests complete. Check the results to see if they look OK.
     
 
 
 ### Marking
 
-Heavy hitter marks: 8/20
+Heavy hitter marks: 20/20
 
-Total score: (38/38) * 80.0 + 8 = 88/100
+Total score: (38/38) * 80.0 + 20 = 100/100
 
