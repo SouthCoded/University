@@ -274,9 +274,9 @@ static void DumpTest(const std::string& file, const std::string& type) {
     std::string model_output_filename = "model_" + type + "r_output";
 
     if (test_index == FLAGS_test_index) {
-      tested_input.WriteToFileOrDie(input_filename);
+      tested_input.WriteToFileOrDie((type == "encode") ? input_filename : model_output_filename);
       std::cout << type << "r input saved to '" << input_filename << "'"<< std::endl;
-      model_output.WriteToFileOrDie(model_output_filename);
+      model_output.WriteToFileOrDie((type == "encode") ? model_output_filename : input_filename);
       std::cout << "Model " << type << "r output saved to '"
 	        << model_output_filename << "'" << std::endl;
       return;
