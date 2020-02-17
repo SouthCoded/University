@@ -153,7 +153,7 @@ void writer(char* a, FILE* out_file,struct node* head, int numberbit){
 		long ten_increment = 10;
 
 		//Gets how many bits the value is 
-		while( value / ten_increment != 0){
+		while(value/ten_increment != 0){
 			ten_increment *= 10;
 			bit_length += 1;
 		}
