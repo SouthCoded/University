@@ -260,55 +260,70 @@ void exception(x86_64_registers* reg) {
     switch (reg->reg_intno) {
 
 
-    // case INT_SYS_FORK: {
-    //     int proc_num = -1;
-    //     for(int i = 1; i<NPROC; i++){
-    //         proc temp = processes[i];
-    //         if(temp.p_state == P_FREE){
-    //             proc_num = i;
-    //             i = NPROC;
-    //         }
-    //     }
+    case INT_SYS_FORK: {
 
-    //     log_printf("This is procNum %d \n",proc_num);
+        //Finds open process slot
+        int proc_num = -1;
+        for(int i = 1; i<NPROC; i++){
+            proc temp = processes[i];
 
-    //     if(proc_num != -1){
-    //         processes[proc_num].p_state = P_RUNNABLE;
-    //     }
+            log_printf("%d state is \n",temp.p_state);
+            if(temp.p_state == P_FREE){
+                proc_num = i;
+                i = NPROC;
+            }
+        }
 
-    //     //New pagetable contains all up to process_data
-    //     x86_64_pagetable* pagetable = copy_pagetable(current->p_pagetable,processes[proc_num].p_pid);
+        log_printf("This is proc num %d\n",proc_num);
 
-    //     //Transfering data
-    //     for (uintptr_t v_addr = PROC_START_ADDR; v_addr < MEMSIZE_VIRTUAL; v_addr += PAGESIZE) {
+        //If slot is open then makes state Runnable
+        if(proc_num != -1){
+            processes[proc_num].p_state = P_RUNNABLE;
+        }
 
-    //         vamapping temp = virtual_memory_lookup(current->p_pagetable,v_addr);
-    //         log_printf("VA %x PA %x %d %d \n",v_addr,temp.pa,temp.pn,temp.perm);
+        //Creates new process pagetable containing up to process_data
+        x86_64_pagetable* pagetable = copy_pagetable(current->p_pagetable,processes[proc_num].p_pid);
 
-    //         //Contains application writeable memory
-    //         if(temp.perm >= 4){   
-    //             uintptr_t addr = -1;
-    //             for (uintptr_t cycle_addr = 0; cycle_addr < MEMSIZE_PHYSICAL; cycle_addr += PAGESIZE) {
-    //                 if(pageinfo[PAGENUMBER(cycle_addr)].refcount == 0){
-    //                     addr = cycle_addr;
-    //                     cycle_addr = MEMSIZE_PHYSICAL;
-    //                 }
-    //             }
+        //Goes through process data
+        for (uintptr_t v_addr = PROC_START_ADDR; v_addr < MEMSIZE_VIRTUAL; v_addr += PAGESIZE) {
 
-    //             log_printf("This is addr %x and v_addr %x\n",addr,v_addr);
-    //             assign_physical_page(addr, processes[proc_num].p_pid);
-    //             memcpy((void*)addr,(void*)temp.pa,PAGESIZE);
+            vamapping temp = virtual_memory_lookup(current->p_pagetable,v_addr);
+            log_printf("VA %x PA %x %d %d \n",v_addr,temp.pa,temp.pn,temp.perm);
+
+            //Contains application writeable memory
+            if(temp.perm >= 4){ 
+
+                //Finds free physical page 
+                uintptr_t addr = -1;
+                for (uintptr_t cycle_addr = 0; cycle_addr < MEMSIZE_PHYSICAL; cycle_addr += PAGESIZE) {
+                    if(pageinfo[PAGENUMBER(cycle_addr)].refcount == 0){
+                        addr = cycle_addr;
+                        cycle_addr = MEMSIZE_PHYSICAL;
+                    }
+                }
+
+                assign_physical_page(addr,processes[proc_num].p_pid);
+
+                //Copies physical page to physical page
+                memcpy((void*)addr,(void*)temp.pa,PAGESIZE);
                 
-    //             virtual_memory_map(pagetable,v_addr,addr,PAGESIZE,PTE_P|PTE_W|PTE_U, allocator);
-    //         }
-    //     }
+                //Maps virtual address to physical address for pagetable
+                virtual_memory_map(pagetable,v_addr,addr,PAGESIZE,PTE_P|PTE_W|PTE_U, allocator);
+            }
+            else if(temp.pn != -1){
+                virtual_memory_map(pagetable,v_addr,temp.pa,PAGESIZE,PTE_P|PTE_W|PTE_U, allocator);
+            }
+        }
 
-    //     processes[proc_num].p_pagetable = pagetable;
+        processes[proc_num].p_pagetable = pagetable;
 
-    //     current->p_registers.reg_rax = proc_num;    
+        current->p_registers.reg_rax = processes[proc_num].p_pid;    
+        processes[proc_num].p_registers = current->p_registers;
+        processes[proc_num].p_registers.reg_rax = 0;
 
-    //     break;
-    // }
+        log_printf("Done with this\n");
+        break;
+    }
 
     case INT_SYS_PANIC:
         panic(NULL);
@@ -538,6 +553,7 @@ void check_virtual_memory(void) {
     // Check that all referenced pages refer to active processes
     for (int pn = 0; pn < PAGENUMBER(MEMSIZE_PHYSICAL); ++pn) {
         if (pageinfo[pn].refcount > 0 && pageinfo[pn].owner >= 0) {
+            //log_printf("This %d and %d\n",pageinfo[pn].owner,processes[pageinfo[pn].owner].p_state);
             assert(processes[pageinfo[pn].owner].p_state != P_FREE);
         }
     }
