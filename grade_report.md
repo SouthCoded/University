@@ -1,20 +1,15 @@
 ## COMP0019 CW4 Grade Report
-Graded at: 2020-03-10 15:48:08.847985
+Graded at: 2020-03-11 00:28:04.819126
 
-Report for commit SHA: 61385801773900dfb2cc92a93e45e0cd28be8990
+Report for commit SHA: 6448e0fd220abba1519a83bc465df9322981e7ac
 
 ### Output
 
 
-    Kernel isolation passed
-    Process isolation passed
-    Virtual page allocation passed
-    Overlapping address spaces passed
-    Fork failed at tick 0
-    Total score: 4/5
+    Timed Out
 
 
 ### Marking
 
-Total score: 80 / 100
+Bad format
 
