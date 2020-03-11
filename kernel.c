@@ -310,9 +310,7 @@ void exception(x86_64_registers* reg) {
                 //Maps virtual address to physical address for pagetable
                 virtual_memory_map(pagetable,v_addr,addr,PAGESIZE,PTE_P|PTE_W|PTE_U, allocator);
             }
-            else if(temp.pn != -1){
-                virtual_memory_map(pagetable,v_addr,temp.pa,PAGESIZE,PTE_P|PTE_W|PTE_U, allocator);
-            }
+
         }
 
         processes[proc_num].p_pagetable = pagetable;
