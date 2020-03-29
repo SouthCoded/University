@@ -11,8 +11,12 @@
 typedef struct command command;
 struct command* head = NULL; 
 int pipefd[2];
-int temp[2];
+int tempfd[2];
+int fd1;
+int fd2;
+int fd_error;
 int firstrun = 0;
+
                    
 struct command {
     int argc;      // number of arguments
@@ -21,6 +25,10 @@ struct command {
     pid_t pid;     // process ID running this command, -1 if none
     int conditional;
     int pipe;
+    int redir;
+    char* filename1;
+    char* filename2;
+    char* error_filename;
     struct command* next; 
 };
  
@@ -37,6 +45,10 @@ static command* command_alloc(void) {
     c->next = NULL;
     c->conditional = 0;
     c->pipe = 0;
+    c->redir = 0;
+    c->filename1 = NULL;
+    c->filename2 = NULL;
+    c->error_filename = NULL;
     return c;
 }
 
@@ -85,40 +97,124 @@ pid_t start_command(command* c, pid_t pgid) {
   
     //Piped command
     if(c->pipe == 1){
-
         c->pid=fork();
 
-        //printf("This is child and this is firstrn %d \n",firstrun);
-
         if (c->pid == 0) {
-            if(firstrun == 1){
-                dup2(temp[0],0);
+
+            if(c->filename1 != NULL){
+                fd1 = open(c->filename1,O_RDONLY);
+                dup2(fd1,0);
+                close(fd1);
             }
+            if(c->filename2 != NULL){
+                fd2 = open(c->filename2,O_WRONLY|O_CREAT|O_TRUNC,0666);
+                dup2(fd2,1);
+                close(fd2);
+            }
+            if(c->error_filename != NULL){
+                fd_error = open(c->error_filename,O_WRONLY|O_CREAT|O_TRUNC,0666);
+                dup2(fd_error,2);
+                close(fd_error);
+            }
+
+            if(firstrun == 1 && c->filename1 == NULL){
+                dup2(tempfd[0],0);
+            }
+
+
             dup2(pipefd[1],1);  //Child's pipefd[1] now contains stdout pipe 1
             // close fds
             close(pipefd[0]);
             close(pipefd[1]);
-            execvp(*(c->argv),c->argv);  //Command executes
+            execvp(*(c->argv),c->argv);  //Command executes      
         }
         firstrun = 1;
     }
     else if(c->pipe == 2){
-        
         c->pid=fork();
         
-        if (c->pid == 0) {  
-            if(firstrun == 1){
-                dup2(temp[0],0);
-            }else{
+        if (c->pid == 0) { 
+
+            if(c->filename1 != NULL){
+                fd1 = open(c->filename1,O_RDONLY);
+                if(fd1 == -1){
+                    perror(strerror(errno));
+                    _exit(1);
+                }
+                dup2(fd1,0);
+                close(fd1);
+            }
+            if(c->filename2 != NULL){
+                fd2 = open(c->filename2,O_WRONLY|O_CREAT|O_TRUNC,0666);
+                if(fd2 == -1){
+                    perror(strerror(errno));
+                    _exit(1);
+                }
+                dup2(fd2,1);
+                close(fd2);
+            }
+            if(c->error_filename != NULL){
+                fd_error = open(c->error_filename,O_WRONLY|O_CREAT|O_TRUNC,0666);
+                if(fd_error == -1){
+                    perror(strerror(errno));
+                    _exit(1);
+                }
+                dup2(fd_error,2);
+                close(fd_error);
+            }
+
+ 
+            if(firstrun == 1 && c->filename1 == NULL){
+                dup2(tempfd[0],0);
+            }
+            else if(c->filename1 == NULL){
                 dup2(pipefd[0],0); //Child reading from pipefd[0]
             }  
-           
-
             close(pipefd[0]);
             close(pipefd[1]);
+            
             execvp(*(c->argv),c->argv);  //Command executes
         } 
         firstrun = 0; 
+    }
+    else if(c->redir == 1){
+        c->pid=fork();
+        
+        if (c->pid == 0) { 
+
+            if(c->filename1 != NULL){
+                fd1 = open(c->filename1,O_RDONLY);
+                if(fd1 == -1){
+                    perror(strerror(errno));
+                    _exit(1);
+                }
+                dup2(fd1,0);
+                close(fd1);
+            }
+            if(c->filename2 != NULL){
+                fd2 = open(c->filename2,O_WRONLY|O_CREAT|O_TRUNC,0666);
+                if(fd2 == -1){
+                    perror(strerror(errno));
+                    _exit(1);
+                }
+                dup2(fd2,1);
+                close(fd2);
+
+            }
+            if(c->error_filename != NULL){
+                fd_error = open(c->error_filename,O_WRONLY|O_CREAT|O_TRUNC,0666);
+                if(fd_error == -1){
+                    perror(strerror(errno));
+                    _exit(1);
+                }
+                dup2(fd_error,2);
+                close(fd_error);
+            }
+
+            execvp(*(c->argv),c->argv);
+            
+
+        }
     }
     else{
         //Forks a child process
@@ -166,26 +262,23 @@ void run_list(command* c) {
     int wexitstatus;
     int nothing = 0; 
 
-    pipe(pipefd);
+    int piper = pipe(pipefd);
     while (checker != NULL) { 
         if(checker->argv != NULL){
 
             pid_t returned_pid;
             
-            //printf("This is the command %s and the cond value %d background %d and pipe %d\n",*(checker->argv),checker->conditional,checker->background,checker->pipe);
+            //printf("Command %s, cond value %d, background %d, pipe %d, redir %d\n",*(checker->argv),checker->conditional,checker->background,checker->pipe,checker->redir);
 
             //Checks if command needs to be piped
             if(checker->pipe == 2){  
-
                 if(firstrun == 1){
-                    temp[0] = pipefd[0];
-                    temp[1] = pipefd[1];
-                    pipe(pipefd);
+                    tempfd[0] = pipefd[0];
+                    tempfd[1] = pipefd[1];
+                    int piper = pipe(pipefd);
                 }               
                 //printf("This is the last child and command %s\n",*(checker->argv));
                 if(nothing == 0){
-
-
                     returned_pid = start_command(checker, 0);
                     checker->pid = returned_pid;
                     if(checker->background == 0){
@@ -198,12 +291,23 @@ void run_list(command* c) {
             }
             else if(checker->pipe == 1){
 
-                if(checker->conditional == 0){
+                if(checker->redir == 1){
+                    if(firstrun == 1){
+                        tempfd[0] = pipefd[0];
+                        tempfd[1] = pipefd[1];
+                        int piper = pipe(pipefd);
+                    }   
+                    returned_pid = start_command(checker, 0);
+                    checker->pid = returned_pid;
+                    close(pipefd[1]);    
+
+                }
+                else if(checker->conditional == 0){
                     //printf("Piped conditional 0 \n");
                     if(firstrun == 1){
-                        temp[0] = pipefd[0];
-                        temp[1] = pipefd[1];
-                        pipe(pipefd);
+                        tempfd[0] = pipefd[0];
+                        tempfd[1] = pipefd[1];
+                        piper = pipe(pipefd);
                     }
                     returned_pid = start_command(checker, 0);
                     checker->pid = returned_pid;
@@ -278,8 +382,18 @@ void run_list(command* c) {
                         nothing = 1;
                     }
                 }
+            }
+            else if(checker->redir == 1){
+                
+                returned_pid = start_command(checker, 0);
+                checker->pid = returned_pid;
+                    
+                if(checker->background == 0){
+                    waitpid(returned_pid,&status,0);
+                }
 
-
+                wifexit = WIFEXITED(status);
+                wexitstatus = WEXITSTATUS(status);
             }
             else if(checker->conditional == 0){
                 //printf("Conditional 0 \n");
@@ -399,6 +513,11 @@ void run_list(command* c) {
         checker_prev = checker;
         checker = checker->next;
     }
+
+    for(int x = 0; x < 2; x++){
+        waitpid(-1, NULL, WNOHANG);
+    } 
+
 }
 
 
@@ -413,13 +532,14 @@ void eval_line(const char* s) {
     command* c = command_alloc();
     head = c;
 
+    int special = 0;
     while ((s = parse_shell_token(s, &type, &token)) != NULL) {
 
         struct command* temp = command_alloc();
 
         //Token is |
         if(type == TOKEN_PIPE){
-            ////printf("Found |\n");
+            //printf("Found |\n");
             c->pipe = 1;
             c->next = temp;
 
@@ -427,7 +547,7 @@ void eval_line(const char* s) {
         }
         //Token is &&
         if(type == TOKEN_AND){
-            ////printf("Found &&\n");
+            //printf("Found &&\n");
             if(c->conditional == 2){
                 c->conditional = 2;
             }
@@ -436,12 +556,11 @@ void eval_line(const char* s) {
             }
             
             c->next = temp;
-            
             temp->conditional = 2;
         }
         //Token is ||
         if(type == TOKEN_OR){
-            ////printf("Found ||\n");
+            //printf("Found ||\n");
             if(c->conditional == 4){
                 c->conditional = 4;
             }
@@ -454,25 +573,54 @@ void eval_line(const char* s) {
         }
         //Token is &
         if(type == TOKEN_BACKGROUND){
-            ////printf("Found &\n");
+            //printf("Found &\n");
             c->background = 1;
             c->next = temp;
-            
         }
         //Token is ;
         if(type == TOKEN_SEQUENCE){
-            ////printf("Found ;\n");
+            //printf("Found ;\n");
             c->next = temp;   
         }
-        
-        if(type == TOKEN_NORMAL){
-            ////printf("This is the command %x and token %s \n",c,token);
-            command_append_arg(c, token);
-        }
+        //Token is redirection
+        if(type == TOKEN_REDIRECTION){
+            //printf("Found redirection\n");
+            c->redir = 1;
 
+            if(strcmp(token,"<") == 0){
+                special = 1;
+            }
+            else if(strcmp(token,">") == 0){
+                special = 2;
+            }
+            else if(strcmp(token,"2>") == 0){
+                special = 3;
+            } 
+        }
+        if(type == TOKEN_NORMAL){
+            //printf("This is the command %x and token %s \n",c,token);
+            if(special == 1){
+                c->filename1 = token;
+                special = 0;
+            }
+            else if(special == 2){
+                c->filename2 =  token;
+                special = 0;
+            }
+            else if(special == 3){
+                c->error_filename = token;
+                special = 0;
+            }           
+            else{
+                command_append_arg(c, token);
+            }
+            
+        }
         if(type != TOKEN_NORMAL){
-            ////printf("next command %x and token %s \n",c,token);
-            c = temp;
+            //printf("next command %x and token %s \n",c,token);
+            if(type != TOKEN_REDIRECTION){
+                c = temp;
+            }
         }
     }
     // execute it
