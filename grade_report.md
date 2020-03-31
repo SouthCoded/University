@@ -1,38 +1,29 @@
 ## COMP0019 CW5 Grade Report
-Graded at: 2020-03-29 20:44:20.612016
-Graded for revision:  45abb40e630fe0a225d83712fba2ae739e171026
+Graded at: 2020-03-31 18:24:46.647192
+Graded for revision:  5c3a36df9b5c6336abc1017f8011ea678728b7af
 
 ### Output
 
 
     CLEAN 
       COMPILE sh0019.c
+    sh0019.c: In function ‘signal_handler’:
+    sh0019.c:76:32: warning: unused parameter ‘a’ [-Wunused-parameter]
+     static void signal_handler(int a){
+                                    ^
     sh0019.c: In function ‘run_list’:
-    sh0019.c:278:25: warning: declaration of ‘piper’ shadows a previous local [-Wshadow]
-                         int piper = pipe(pipefd);
-                             ^
-    sh0019.c:265:9: note: shadowed declaration is here
+    sh0019.c:299:9: warning: variable ‘piper’ set but not used [-Wunused-but-set-variable]
          int piper = pipe(pipefd);
              ^
-    sh0019.c:278:25: warning: unused variable ‘piper’ [-Wunused-variable]
-                         int piper = pipe(pipefd);
-                             ^
-    sh0019.c:298:29: warning: declaration of ‘piper’ shadows a previous local [-Wshadow]
-                             int piper = pipe(pipefd);
-                                 ^
-    sh0019.c:265:9: note: shadowed declaration is here
-         int piper = pipe(pipefd);
-             ^
-    sh0019.c:298:29: warning: unused variable ‘piper’ [-Wunused-variable]
-                             int piper = pipe(pipefd);
-                                 ^
-    sh0019.c:265:9: warning: variable ‘piper’ set but not used [-Wunused-but-set-variable]
-         int piper = pipe(pipefd);
-             ^
-    sh0019.c:261:9: warning: variable ‘wifexit’ set but not used [-Wunused-but-set-variable]
+    sh0019.c:277:9: warning: variable ‘wifexit’ set but not used [-Wunused-but-set-variable]
          int wifexit;
              ^
-    sh0019.c:498:24: warning: ‘wexitstatus’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+    sh0019.c: In function ‘start_command’:
+    sh0019.c:102:9: warning: ignoring return value of ‘chdir’, declared with attribute warn_unused_result [-Wunused-result]
+             chdir((c->argv)[1]);
+             ^
+    sh0019.c: In function ‘run_list’:
+    sh0019.c:566:24: warning: ‘wexitstatus’ may be used uninitialized in this function [-Wmaybe-uninitialized]
                      else if(wexitstatus != 0){
                             ^
       COMPILE helpers.c
@@ -105,52 +96,19 @@ Graded for revision:  45abb40e630fe0a225d83712fba2ae739e171026
     Test REDIR14: passed
     Test REDIR15: passed
     Test REDIR16: passed
-    Test INTR1: FAILED in 0.205 sec
-        command  `echo a && sleep 0.2 && echo b`
-        expected `a`
-        got      `a b`
-    Test INTR2: FAILED in 0.206 sec
-        command  `echo start && sleep 0.2 && echo undesired  \n  echo end`
-        expected `start end`
-        got      `start undesired end`
-    Test INTR3: FAILED in 0.507 sec
-        command  `sleep 0.3 && echo yes & sleep 0.2 && echo no`
-        expected `yes`
-        got      `no yes`
-    Test INTR4: FAILED in 1.004 sec
-        command  `sleep 1`
-        should have completed in 0.150 sec
-    Test INTR5: FAILED in 1.006 sec
-        command  `../sh0019 -q cmdINTR5.sh`
-        expected ``
-        got      `undesired`
-        should have completed in 0.150 sec
-    Test CD1: FAILED in 0.028 sec
-        command  `cd / ; pwd`
-        expected `/`
-        got      `/home/user/out`
-    Test CD2: FAILED in 0.004 sec
-        command  `cd / ; cd /usr ; pwd`
-        expected `/usr`
-        got      `/home/user/out`
-    Test CD3: FAILED in 0.005 sec
-        command  `cd / ; cd /doesnotexist 2> /dev/null ; pwd`
-        expected `/`
-        got      `/home/user/out`
-    Test CD4: FAILED in 0.004 sec
-        command  `cd / && pwd`
-        expected `/`
-        got      `/home/user/out`
+    Test INTR1: passed
+    Test INTR2: passed
+    Test INTR3: passed
+    Test INTR4: passed
+    Test INTR5: passed
+    Test CD1: passed
+    Test CD2: passed
+    Test CD3: passed
+    Test CD4: passed
     Test CD5: passed
     Test CD6: passed
-    Test CD7: FAILED in 0.005 sec
-        command  `cd /tmp && cd / && pwd`
-        expected `/`
-        got      `/home/user/out`
-    Test CD8: FAILED in 0.005 sec
-        command  `cd / ; cd /doesnotexist 2> /dev/null > /dev/null ; pwd`
-        expected `/`
-        got      `/home/user/out`
+    Test CD7: passed
+    Test CD8: passed
     Test ADVPIPE1: passed
     Test ADVBGCOND1: passed
     Test ADVBGCOND2: passed
@@ -159,5 +117,5 @@ Graded for revision:  45abb40e630fe0a225d83712fba2ae739e171026
 
 ### Marking
 
-Total score: (87/100)
+Total score: (100/100)
 
