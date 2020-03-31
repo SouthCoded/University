@@ -16,7 +16,7 @@ int fd1;
 int fd2;
 int fd_error;
 int firstrun = 0;
-
+volatile sig_atomic_t signal_var = 0;
                    
 struct command {
     int argc;      // number of arguments
@@ -32,7 +32,6 @@ struct command {
     struct command* next; 
 };
  
-
 // command_alloc()
 //    Allocate and return a new command structure.
 
@@ -74,7 +73,9 @@ static void command_append_arg(command* c, char* word) {
     ++c->argc;
 }
 
-
+static void signal_handler(int a){
+    signal_var = 1;
+}
 // COMMAND EVALUATION
 
 // start_command(c, pgid)
@@ -94,13 +95,25 @@ static void command_append_arg(command* c, char* word) {
 
 pid_t start_command(command* c, pid_t pgid) {
     (void) pgid;
-  
-    //Piped command
-    if(c->pipe == 1){
+
+    //printf("Command %s, cond value %d, background %d, pipe %d, redir %d\n",*(c->argv),c->conditional,c->background,c->pipe,c->redir);
+   
+    if(strcmp(*(c->argv),"cd") == 0){
+        chdir((c->argv)[1]);
+    }
+    else{
         c->pid=fork();
-
+    }
+    if(c->pipe == 1){
+        //Sets the pgid of the child to the pgid
+        if(pgid == 0){
+            setpgid(c->pid,0);
+        }
+        else{
+            setpgid(c->pid, pgid);
+        }
         if (c->pid == 0) {
-
+            set_signal_handler(SIGINT,signal_handler);
             if(c->filename1 != NULL){
                 fd1 = open(c->filename1,O_RDONLY);
                 dup2(fd1,0);
@@ -130,9 +143,14 @@ pid_t start_command(command* c, pid_t pgid) {
         }
         firstrun = 1;
     }
-    else if(c->pipe == 2){
-        c->pid=fork();
-        
+    else if(c->pipe == 2){ 
+        //Sets the pgid of the child to the pgid
+        if(pgid == 0){
+            setpgid(c->pid,0);
+        }
+        else{
+            setpgid(c->pid, pgid);
+        }     
         if (c->pid == 0) { 
 
             if(c->filename1 != NULL){
@@ -177,9 +195,7 @@ pid_t start_command(command* c, pid_t pgid) {
         } 
         firstrun = 0; 
     }
-    else if(c->redir == 1){
-        c->pid=fork();
-        
+    else if(c->redir == 1){    
         if (c->pid == 0) { 
 
             if(c->filename1 != NULL){
@@ -199,7 +215,6 @@ pid_t start_command(command* c, pid_t pgid) {
                 }
                 dup2(fd2,1);
                 close(fd2);
-
             }
             if(c->error_filename != NULL){
                 fd_error = open(c->error_filename,O_WRONLY|O_CREAT|O_TRUNC,0666);
@@ -212,21 +227,22 @@ pid_t start_command(command* c, pid_t pgid) {
             }
 
             execvp(*(c->argv),c->argv);
-            
-
         }
     }
     else{
-        //Forks a child process
-        c->pid = fork();
-    
+        if(c->background == 1){
+            setpgid(c->pid,c->pid);
+        }
+        //printf("Command c %s Child PID %d, PGID %d\n",*(c->argv),c->pid, getpgid(c->pid));
         //If we are the child process, we execute
         if(c->pid == 0){
+            set_signal_handler(SIGINT,SIG_DFL);
             int x  = execvp(*(c->argv),c->argv);
     
             if(x == -1){
                 _exit(1);
             }
+
         }
     }
 
@@ -262,7 +278,26 @@ void run_list(command* c) {
     int wexitstatus;
     int nothing = 0; 
 
+    struct command *cycle = c; 
+
+    while (cycle != NULL) { 
+        if(cycle->argv != NULL){
+            if(cycle->background == 1 && (cycle->conditional == 2 || cycle->conditional == 4)){
+                struct command *temp = c; 
+                while (temp != cycle) { 
+                    if(temp->argv != NULL && temp->conditional != 0){
+                        temp->background = 1;
+                    }
+                    temp = temp->next;
+                }
+            }
+        }
+        cycle = cycle->next;
+    }
+
+
     int piper = pipe(pipefd);
+
     while (checker != NULL) { 
         if(checker->argv != NULL){
 
@@ -275,14 +310,16 @@ void run_list(command* c) {
                 if(firstrun == 1){
                     tempfd[0] = pipefd[0];
                     tempfd[1] = pipefd[1];
-                    int piper = pipe(pipefd);
+                    piper = pipe(pipefd);
                 }               
-                //printf("This is the last child and command %s\n",*(checker->argv));
+                
                 if(nothing == 0){
-                    returned_pid = start_command(checker, 0);
+                    returned_pid = start_command(checker, 1);
                     checker->pid = returned_pid;
                     if(checker->background == 0){
+                        claim_foreground(returned_pid);
                         waitpid(returned_pid,&status,0);
+                        claim_foreground(0);
                         wifexit = WIFEXITED(status);
                         wexitstatus = WEXITSTATUS(status);
                     }
@@ -295,9 +332,9 @@ void run_list(command* c) {
                     if(firstrun == 1){
                         tempfd[0] = pipefd[0];
                         tempfd[1] = pipefd[1];
-                        int piper = pipe(pipefd);
+                        piper = pipe(pipefd);
                     }   
-                    returned_pid = start_command(checker, 0);
+                    returned_pid = start_command(checker, 1);
                     checker->pid = returned_pid;
                     close(pipefd[1]);    
 
@@ -309,20 +346,20 @@ void run_list(command* c) {
                         tempfd[1] = pipefd[1];
                         piper = pipe(pipefd);
                     }
-                    returned_pid = start_command(checker, 0);
+                    returned_pid = start_command(checker, 1);
                     checker->pid = returned_pid;
-                    //printf("These are pipe values %d %d \n",pipefd[0],pipefd[1]);
+                    
                     close(pipefd[1]);
                 } 
                 else if(checker->conditional == 2){
                     if(checker->background == 1){
                         //Forks a child process -> backgrounded
                         pid_t child_child_fork = fork();
-                        
+
                         //If we are the child process, we execute
                         if(child_child_fork == 0){
                             //printf("Spawned child process\n");
-                            returned_pid = start_command(checker_prev, 0);
+                            returned_pid = start_command(checker_prev, 1);
                             checker->pid = returned_pid;
                             close(pipefd[1]);
                             waitpid(returned_pid,&status,0);
@@ -331,7 +368,7 @@ void run_list(command* c) {
                             wexitstatus = WEXITSTATUS(status);
 
                             if(wexitstatus == 0){
-                                returned_pid = start_command(checker, 0);
+                                returned_pid = start_command(checker, 1);
                                 checker->pid = returned_pid;
                                 close(pipefd[1]);
                             }
@@ -340,7 +377,7 @@ void run_list(command* c) {
                     }
                     else if(wexitstatus == 0){
                         //printf("Conditional 1 second part run normal\n");
-                        returned_pid = start_command(checker, 0);
+                        returned_pid = start_command(checker, 1);
                         checker->pid = returned_pid;
                         close(pipefd[1]);       
                     }
@@ -352,10 +389,11 @@ void run_list(command* c) {
                     if(checker->background == 1){
                         //Forks a child process -> backgrounded
                         pid_t child_child_fork = fork();
+
                         //If we are the child process, we execute
                         if(child_child_fork == 0){
                             //printf("Spawned child process\n");
-                            returned_pid = start_command(checker_prev, 0);
+                            returned_pid = start_command(checker_prev, 1);
                             checker->pid = returned_pid;
                             close(pipefd[1]);
                             waitpid(returned_pid,&status,0);
@@ -364,7 +402,7 @@ void run_list(command* c) {
                             wexitstatus = WEXITSTATUS(status);
 
                             if(wexitstatus != 0){
-                                returned_pid = start_command(checker, 0);
+                                returned_pid = start_command(checker, 1);
                                 checker->pid = returned_pid;
                                 close(pipefd[1]);
                             }
@@ -374,7 +412,7 @@ void run_list(command* c) {
                     else if(wexitstatus != 0){
                         //printf("Conditional 2 second part run normal\n");
 
-                        returned_pid = start_command(checker, 0);
+                        returned_pid = start_command(checker, 1);
                         checker->pid = returned_pid;
                         close(pipefd[1]);      
                     } 
@@ -384,61 +422,81 @@ void run_list(command* c) {
                 }
             }
             else if(checker->redir == 1){
-                
-                returned_pid = start_command(checker, 0);
+                returned_pid = start_command(checker, 1);
                 checker->pid = returned_pid;
                     
                 if(checker->background == 0){
+                    claim_foreground(returned_pid);
                     waitpid(returned_pid,&status,0);
+                    claim_foreground(0);
                 }
 
-                wifexit = WIFEXITED(status);
-                wexitstatus = WEXITSTATUS(status);
+                if(strcmp(*(checker->argv),"cd") == 0){
+                    wifexit = 1;
+                    wexitstatus = 1;
+                }
+                else{
+                    wifexit = WIFEXITED(status);
+                    wexitstatus = WEXITSTATUS(status);   
+                }  
             }
             else if(checker->conditional == 0){
                 //printf("Conditional 0 \n");
-                returned_pid = start_command(checker, 0);
+                returned_pid = start_command(checker, 1);
                 checker->pid = returned_pid;
                 
                 if(checker->background == 0){
+                    claim_foreground(getpgid(returned_pid));
                     waitpid(returned_pid,&status,0);
+                    claim_foreground(0);
                 }
-
                 wifexit = WIFEXITED(status);
                 wexitstatus = WEXITSTATUS(status);
             } 
             else if(checker->conditional == 1 && checker->background == 0){
                 //printf("Conditional 1 first part run normal\n");
                 
-                returned_pid = start_command(checker, 0);
+                returned_pid = start_command(checker, 20000);
                 checker->pid = returned_pid;
-
+                
+                claim_foreground(getpgid(returned_pid));
                 waitpid(returned_pid,&status,0);
-                            
-                wifexit = WIFEXITED(status);
-                wexitstatus = WEXITSTATUS(status);        
+                claim_foreground(0);
+                if(strcmp(*(checker->argv),"cd") == 0){
+                    wifexit = 1;
+                    wexitstatus = 0;
+                }
+                else{
+                    wifexit = WIFEXITED(status);
+                    wexitstatus = WEXITSTATUS(status);   
+                }    
             }
             else if(checker->conditional == 2){
                 if(checker->background == 1){
                     //Forks a child process -> backgrounded
                     pid_t child_fork = fork();
+                    setpgid(child_fork,child_fork);
+
+                    //printf("This is the bp pgid %d",getpgid(child_fork));
+
                     //If we are the child process, we execute
                     if(child_fork == 0){
                         //printf("Spawned child process\n");
-                        returned_pid = start_command(checker_prev, 0);
+
+                        returned_pid = start_command(checker_prev, 1);
                         checker->pid = returned_pid;
 
                         waitpid(returned_pid,&status,0);
-                        
+
                         wifexit = WIFEXITED(status);
                         wexitstatus = WEXITSTATUS(status);
 
                         if(wexitstatus == 0){
-                            returned_pid = start_command(checker, 0);
+                            returned_pid = start_command(checker, 1);
                             checker->pid = returned_pid;
 
                             waitpid(returned_pid,&status,0);
-                            
+
                             wifexit = WIFEXITED(status);
                             wexitstatus = WEXITSTATUS(status);
                         }
@@ -447,23 +505,33 @@ void run_list(command* c) {
                 }
                 else if(wexitstatus == 0){
                     //printf("Conditional 1 second part run normal\n");
-                    returned_pid = start_command(checker, 0);
+                    returned_pid = start_command(checker, 1);
                     checker->pid = returned_pid;
 
+                    claim_foreground(getpgid(returned_pid));
                     waitpid(returned_pid,&status,0);
+                    claim_foreground(0);
                             
-                    wifexit = WIFEXITED(status);
-                    wexitstatus = WEXITSTATUS(status);
-                    
+                    if(strcmp(*(checker->argv),"cd") == 0){
+                        wifexit = 1;
+                        wexitstatus = 0;
+                    }
+                    else{
+                        wifexit = WIFEXITED(status);
+                        wexitstatus = WEXITSTATUS(status);   
+                    }  
+
                 }
             }
             else if(checker->conditional == 3 && checker->background == 0){
                 //printf("Conditional 2 first part run normal\n");
                 
-                returned_pid = start_command(checker, 0);
+                returned_pid = start_command(checker, 1);
                 checker->pid = returned_pid;
 
+                claim_foreground(getpgid(returned_pid));
                 waitpid(returned_pid,&status,0);
+                claim_foreground(0);
                             
                 wifexit = WIFEXITED(status);
                 wexitstatus = WEXITSTATUS(status);        
@@ -475,7 +543,7 @@ void run_list(command* c) {
                     //If we are the child process, we execute
                     if(child_fork == 0){
                         //printf("Spawned child process\n");
-                        returned_pid = start_command(checker_prev, 0);
+                        returned_pid = start_command(checker_prev, 1);
                         checker->pid = returned_pid;
 
                         waitpid(returned_pid,&status,0);
@@ -484,7 +552,7 @@ void run_list(command* c) {
                         wexitstatus = WEXITSTATUS(status);
 
                         if(wexitstatus != 0){
-                            returned_pid = start_command(checker, 0);
+                            returned_pid = start_command(checker, 1);
                             checker->pid = returned_pid;
 
                             waitpid(returned_pid,&status,0);
@@ -498,26 +566,33 @@ void run_list(command* c) {
                 else if(wexitstatus != 0){
                     //printf("Conditional 2 second part run normal\n");
 
-                    returned_pid = start_command(checker, 0);
+                    returned_pid = start_command(checker, 1);
                     checker->pid = returned_pid;
 
+                    claim_foreground(getpgid(returned_pid));
                     waitpid(returned_pid,&status,0);
+                    claim_foreground(0);
                             
                     wifexit = WIFEXITED(status);
                     wexitstatus = WEXITSTATUS(status);
                 }
             }
 
+            //printf("This is the variable %d\n\n",signal_var);
+            
+
             //printf("This is commands wifexit %d this is wexitstatus %d for command %d\n\n",wifexit,wexitstatus,checker->pid);
         }
         checker_prev = checker;
         checker = checker->next;
+        if(signal_var == 1){
+            checker = NULL;
+        }
     }
 
     for(int x = 0; x < 2; x++){
         waitpid(-1, NULL, WNOHANG);
     } 
-
 }
 
 
@@ -599,6 +674,7 @@ void eval_line(const char* s) {
         }
         if(type == TOKEN_NORMAL){
             //printf("This is the command %x and token %s \n",c,token);
+
             if(special == 1){
                 c->filename1 = token;
                 special = 0;
@@ -633,6 +709,7 @@ void eval_line(const char* s) {
 int main(int argc, char* argv[]) {
     FILE* command_file = stdin;
     int quiet = 0;
+    set_signal_handler(SIGINT,signal_handler);
 
     // Check for '-q' option: be quiet (print no prompts)
     if (argc > 1 && strcmp(argv[1], "-q") == 0) {
@@ -654,6 +731,7 @@ int main(int argc, char* argv[]) {
     //   into the foreground
     claim_foreground(0);
     set_signal_handler(SIGTTOU, SIG_IGN);
+    
 
     char buf[BUFSIZ];
     int bufpos = 0;
