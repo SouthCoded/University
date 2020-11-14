@@ -1,0 +1,605 @@
+#!/usr/bin/perl -T
+
+use strict;
+use warnings;
+
+require 'sys/syscall.ph';
+require 'sys/resource.ph';
+
+my $CLIENT = glob ('~ucacbnk/gz03-2016/bin/ticker-client');
+my $KEYFILE = glob ('~ucacbnk/gz03-2016/key');
+my $SHA1 = '/usr/bin/sha1sum';
+my $LOGNAME = '/usr/bin/logname';
+my $WRAP = '/cs/research/nets/home0/starship/ucacbnk/gz03-2016/bin/wrap';
+
+$ENV{'PATH'} = '/bin:/usr/bin:/';
+delete $ENV{'IFS'};
+delete $ENV{'TZ'};
+foreach (keys %ENV) {
+    delete $ENV{$_} if /^LD_/;
+}
+
+my $key;
+my @progstat;
+my $score = 0;
+my $maxscore = 0;
+
+my $maxdelay = 13; # transaction must be emitted after this many seconds
+
+my $peers;
+my $server;
+my $client;
+my @msgs;
+my %pidtype;
+
+$| = 1;
+
+my @ports = ();
+
+# enforce uniqueness on randomly generated ports
+sub gen_rand_port {
+    while (1) {
+        my $port = 40000 + int(rand() * 20000);
+        if (!grep(/$port/, @ports)) {
+            push(@ports, $port);
+            return $port;
+        }
+    }
+}
+
+my @uniqueids = ();
+
+# enforce uniqueness on randomly generated server IDs
+sub gen_rand_id {
+    while (1) {
+        my $id = int(rand() * 2000000);
+        if (!grep(/$id/, @uniqueids)) {
+            push (@uniqueids, $id);
+            return $id;
+        }
+    }
+}
+
+sub start_n {
+    my($n) = @_;
+
+    @msgs = ();
+    $peers = [ ];
+
+    my $i;
+    for($i = 0; $i < $n; $i++){
+        my $port = gen_rand_port();
+        my $id = gen_rand_id();
+        $peers->[$i] = { port => $port,
+                         id => $id };
+    }
+
+    for($i = 0; $i < $n; $i++){
+        my @args;
+        my $j;
+        for($j = 0; $j < $n; $j++){
+            if($i != $j){
+                push(@args, "127.0.0.1");
+                push(@args, $peers->[$j]{port});
+            }
+        }
+
+        my $of = "/tmp/tt-$$-$<-$i";
+	$of = untaint ($of);
+        $peers->[$i]{file} = $of;
+
+        my $pid = forkexec($of, $server, $peers->[$i]{id}, $peers->[$i]{port},
+                           @args);
+        $peers->[$i]{pid} = $pid;
+        $pidtype{$pid} = "server";
+    }
+}
+
+sub forkexec {
+    my($of, @args) = @_;
+    my $pid;
+
+    if($pid = fork){
+	return $pid;
+    } elsif(defined $pid){
+        my $rl = pack("IIII", 0, 0, 0, 0);
+        syscall(&SYS_setrlimit, &RLIMIT_CORE, $rl);
+        close(STDIN);
+        open(STDIN, "</dev/null");
+	close(STDOUT);
+	open(STDOUT, ">$of");
+#	print STDERR "\nEXEC: @args\n";
+	exec @args;
+	die "test-ticker: cannot exec $args[0]\n";
+	exit(0);
+    } else {
+	die "test-ticker: fork failed: $!\n";
+    }
+}
+
+sub waitx {
+    while(1){
+        my $x = waitpid(-1, 1); # non-blocking
+        if(defined($x) && $x > 0){
+            if($? & 0200){
+                printf(STDERR "test-ticker: %s crashed\n",
+                       $pidtype{$x});
+            }
+        } else {
+            last;
+        }
+    }
+}
+
+# enforce uniqueness on randomly generated transaction IDs
+sub gen_rand_xaction {
+    while (1) {
+        my $xid = "t" . int(rand() * 2000000) . "x";
+        if (!grep(/$xid/, @msgs)) {
+            push @msgs, $xid;
+            return $xid;
+        }
+    }
+}
+
+sub submit_one {
+    my $np = $#{$peers} + 1;
+    my $pi;
+    while(1){
+        $pi = int(rand($np));
+        last if !defined($peers->[$pi]{dead});
+    }
+    my $port = $peers->[$pi]{port};
+    my $msg = gen_rand_xaction();
+    my $pid = forkexec("/dev/null", $client, "127.0.0.1", $port, $msg);
+    $pidtype{$pid} = "client";
+}
+
+sub submit_n {
+    my($n) = @_;
+    my $i;
+    for($i = 0; $i < $n; $i++){
+        submit_one();
+    }
+    waitx();
+}
+
+# Returns "" if ok, otherwise an error message.
+# Just looks at the first $nm messages.
+sub analyze1 {
+    my($nm) = @_;
+    my $np = $#{$peers} + 1;
+    my $pl = [ ];
+    my @ml = @msgs[0..($nm-1)];
+    my $ns = 0;
+    my $i;
+
+    for($i = 0; $i < $np; $i++){
+        $pl->[$i] = [ ];
+        my $f = $peers->[$i]{file};
+        die "cannot open $f" if !open(F, $f);
+        while(<F>){
+            if(/(t[0-9]+x)/){
+                if(grep(/$1/, @ml)){
+                    push(@{$pl->[$i]}, $1);
+                }
+            } else {
+                print STDERR "test-ticker.pl: unexpected line $_\n";
+            }
+        }
+        close(F);
+    }
+
+    if(0){
+        for($i = 0; $i < $np; $i++){
+            my @a = @{$pl->[$i]};
+            print "@a\n";
+        }
+    }
+
+    my @a0;
+
+    # Did the servers produce the right number of output transactions?
+    for($i = 0; $i < $np; $i++){
+        if(!defined($peers->[$i]{dead})){
+            my @a = @{$pl->[$i]};
+            if($#a != $#ml){
+                return "too few transactions in output";
+            }
+            @a0 = @a;
+        }
+    }
+
+    # Did the servers produce the same orders?
+    for($i = 0; $i < $np; $i++){
+        if(!defined($peers->[$i]{dead})){
+            my @a = @{$pl->[$i]};
+            my $j;
+            for($j = 0; $j <= $#a0; $j++){
+                if($a[$j] ne $a0[$j]){
+                    return "servers produced different orders";
+                }
+            }
+            $ns += 1;
+        }
+    }
+
+    # Did the servers produce each submitted transaction exactly once?
+    @a0 = sort { $a cmp $b } @a0;
+    @ml = sort { $a cmp $b } @ml;
+    for($i = 0; $i <= $#ml; $i++){
+        if($a0[$i] ne $ml[$i]){
+            return "submitted and output transactions differ";
+        }
+    }
+
+#    print STDERR "(ok $ns $#ml) ";
+
+    return "";
+}
+
+sub analyze {
+    my $res = analyze1($#msgs + 1);
+    return $res;
+}
+
+sub killall {
+    for(@{$peers}){
+        if(defined($_->{pid})){
+            kill(9, $_->{pid});
+            unlink($_->{file});
+        }
+    }
+    sleep(1);
+    waitx();
+}
+
+# Make sure no dead server has produced more than $n lines of output.
+sub check_dead {
+    my($n) = @_;
+    my $p;
+    foreach $p (@{$peers}){
+        if(defined($p->{dead})){
+            my $f = $p->{file};
+            die "cannot open $f" if !open(F, $f);
+            my @a;
+            while(<F>){
+                if(/(t[0-9]+x)/){
+                    if(grep(/$1/, @msgs)){
+                        push(@a, $1);
+                    }
+                }
+            }
+            close(F);
+            if($#a + 1 > $n){
+                return "dead server produced output";
+            }
+        }
+    }
+    return "";
+}
+
+sub kill_test {
+    my($persec) = @_;
+    my $np = $#{$peers} + 1;
+    my $total = 0;
+
+    my $i;
+    for($i = 0; $i < 3; $i++){
+        submit_n($persec);
+        sleep(1);
+    }
+
+    # Decide which to kill, stop submitting through them.
+    for($i = 0; $i < $np/2; $i++){
+#        print STDERR "(killing $i) ";
+        $peers->[$i]{dead} = 1;
+    }
+
+    # Give the dead ones a chance to drain submissions in progress.
+    for($i = 0; $i < $maxdelay; $i++){
+        submit_n($persec);
+        sleep(1);
+    }
+
+    # Now actually kill them.
+    for($i = 0; $i < $np/2; $i++){
+        kill(9, $peers->[$i]{pid});
+    }
+
+    # Give everybody time to detect the dead ones,
+    # and an extra round.
+    for($i = 0; $i < 2 * $maxdelay; $i++){
+        submit_n($persec);
+        sleep(1);
+    }
+
+    my $res = check_dead ($persec * (3 + $maxdelay));
+    if($res ne ""){
+        return $res;
+    }
+
+    return analyze1 ($persec * (3 + 2 * $maxdelay));
+}
+
+sub running_test {
+    my($sec, $persec) = @_;
+
+    my $i;
+    for($i = 0; $i < $sec; $i++){
+        submit_n($persec);
+        if($i > $maxdelay){
+            my $res = analyze1($persec * ($i - $maxdelay));
+            if($res ne ""){
+                return $res;
+            }
+        }
+        sleep(1);
+    }
+}
+
+# Sub $sec * $persec transactions, then give the servers
+# plenty of time to finish them all.
+sub all_test {
+    my($sec, $persec) = @_;
+    my ($i, $res);
+
+    for($i = 0; $i < $sec; $i++){
+        submit_n($persec);
+        sleep(1);
+    }
+    for($i = 0; $i < $maxdelay; $i++){
+        sleep(1);
+        $res = analyze1($sec * $persec);
+        if($res eq ""){
+            return $res;
+        }
+    }
+    return $res;
+}
+
+sub check_res ($$) {
+    my ($res, $points) = @_;
+    $maxscore += $points;
+    if($res eq "") {
+	$score += $points;
+        print "passed\n";
+    } else {
+        print "failed ($res)\n";
+        #killall();
+        #exit(1);
+    }
+}
+
+sub sha1 ($) {
+    pipe (P0R, P0W);
+    pipe (P1R, P1W);
+    my $pid = fork;
+    die "fork: $!" unless defined $pid;
+
+    if ($pid == 0) {
+	close (P0W);
+	close (P1R);
+	open (STDIN, "<&P0R");
+	open (STDOUT, ">&P1W");
+	exec $SHA1;
+	die "$SHA1: $!";
+    }
+
+    close (P0R);
+    close (P1W);
+    print P0W "$_[0]";
+    close (P0W);
+    my $ret = <P1R>;
+    close (P1R);
+    waitpid $pid, 0;
+
+    return $1 if ($ret =~ /(^[0-9a-f]+)/);
+    return undef;
+}
+sub halve ($) {
+    return substr $_[0], 0, length ($_[0])/2;
+}
+sub bad_mac ($) {
+    die unless defined $key;
+    my $msg = shift;
+    return halve (sha1 (sha1 ($key . $msg) . $key));
+}
+
+
+sub drop_priv () {
+    $> = $<;
+    $) = $(;
+}
+sub load_key () {
+    if ($( eq $) && -x $WRAP && ! -r "$KEYFILE"
+	&& $0 =~ /.*\/([^\/]+)$/ && !exists $ENV{'NOWRAP'}) {
+	my $prog = $1;
+	my @av;
+	foreach (@ARGV) {
+	    push @av, $1 if $_ =~ /(.*)/;
+	}
+	$ENV{'NOWRAP'} = 1;
+	exec $WRAP ($WRAP, $prog, @av);
+    }
+
+    if (open (KEYFILE, "<$KEYFILE")) {
+	$key = <KEYFILE>;
+	close ($KEYFILE);
+    }
+    else {
+	#warn "$KEYFILE: $!";
+    }
+    drop_priv ();
+}
+
+sub check () {
+    load_key;
+    die "could not load key" unless defined $key;
+    shift @ARGV;
+    while (<>) {
+	if (/\[internal use only\: (\w+):(\d+):(\d+):([0-9a-f]+):([0-9a-f]+)\]/) {
+	    my ($user, $score, $then, $hash, $mac) = ($1, $2, $3, $4, $5);
+	    if ($mac eq bad_mac ("$user:$score:$then:$hash")) {
+		print "$user\t$score\t# " . $hash . "\t"
+		    . localtime ($then) . "\n";
+	    }
+	    else {
+		warn "BAD MAC";
+	    }
+	}
+    }
+    exit 0;
+}
+
+sub sha1prog () {
+    pipe (P1R, P1W);
+    my $pid = fork;
+    die "fork: $!" unless defined $pid;
+
+    if ($pid == 0) {
+	close (P1R);
+	open (STDIN, "<&PROG");
+	open (STDOUT, ">&P1W");
+	exec $SHA1;
+	die "$SHA1: $!";
+    }
+
+    close (P1W);
+    my $ret = <P1R>;
+    close (P1R);
+    waitpid $pid, 0;
+
+    return $1 if ($ret =~ /(^[0-9a-f]+)/);
+    return undef;
+}
+
+sub logit () {
+    print "FINAL SCORE: $score/$maxscore\n";
+    if (defined $key) {
+	my @newstat = lstat $server;
+	my $bad;
+	if ($newstat[3] != 1) {
+	    $bad = 1;
+	    warn "XXX - too many links";
+	}
+	foreach (0, 1, 7, 9, 10) {
+	    if ($progstat[$_] != $newstat[$_]) {
+		$bad = 1;
+		warn "XXX - stat field $_ changed";
+	    }
+	}
+	my $proghash = sha1prog;
+	unless (defined $proghash) {
+	    $bad = 1;
+	    warn "XXX - bad proghash";
+	}
+
+	my $logname;
+	chomp ($logname = `$LOGNAME`);
+	my @pw = getpwnam ($logname);
+	unless (@pw && $pw[2] == $<) {
+	    $bad = 1;
+	    warn "XXX - logname/uid mismatch";
+	}
+
+	if (!$bad) {
+	    my $now = time;
+	    $proghash = halve ($proghash);
+	    print STDOUT ("[internal use only: ",
+			  "$logname:$score:$now:$proghash:",
+			  bad_mac ("$logname:$score:$now:$proghash"), "]\n");
+	}
+    }
+}
+
+sub usage () {
+    my $prog = 'test-ticker';
+    $prog = $1 if $0 =~ /.*\/([^\/]+)$/;
+    print STDERR <<"EOF;";
+usage: $prog ticker-server [ticker-client] # Test ticker-server program
+       $prog -score [file1 ...]            # Extract scores from output
+EOF;
+    exit 1;
+}
+
+sub untaint ($) {
+    return $1 if defined ($_[0]) && $_[0] =~ /\A(.*)\z/;
+    return $_[0];
+}
+
+sub main {
+    my $i;
+    my $res;
+
+    usage unless (@ARGV);
+    if ($ARGV[0] eq '-score') { check; }
+    elsif ($ARGV[0] =~ /^-/ || @ARGV > 2) { usage; }
+
+    $server = untaint ($ARGV[0]);
+    $server = "./$server" unless $server =~ /\//;
+    if (defined $ARGV[1]) {
+	$client = untaint ($ARGV[1]);
+    }
+    else {
+	$client = untaint ($CLIENT);
+    }
+
+    (@progstat = lstat $server) || die "$server: $!";
+    if ($client eq $CLIENT
+	&& $progstat[3] == 1 && -f _ && -R _ && $progstat[4] == $<) {
+	load_key;
+	undef $key unless (open (PROG, "<$server"));
+    }
+    drop_priv;
+
+    print "One server, one transaction (no points): ";
+    start_n(1);
+    sleep(1);
+    $res = all_test(1, 1);
+    check_res ($res, 0);
+    killall();
+
+    print "Two servers, one transaction (1 point): ";
+    start_n(2);
+    sleep(5);
+    $res = all_test(1, 1);
+    check_res ($res, 1);
+
+    print "Two servers, two transactions (1 point): ";
+    $res = all_test(2, 1);
+    check_res($res, 1);
+
+    print "Two servers, ten concurrent transactions (2 points): ";
+    $res = all_test(1, 10);
+    check_res($res, 2);
+
+    killall();
+
+    print "Five servers, continuous transactions (3 points): ";
+    start_n(5);
+    sleep(5);
+    $res = running_test($maxdelay + 10, 10);
+    check_res($res, 3);
+    killall();
+
+    print "One of two servers fail (1 point): ";
+    start_n(2);
+    sleep(5);
+    $res = kill_test(10);
+    check_res ($res, 1);
+    killall();
+
+    print "Three of six servers fail (2 points): ";
+    start_n(6);
+    sleep(5);
+    $res = kill_test(10);
+    check_res ($res, 2);
+
+    killall();
+
+    logit ();
+    close (PROG);
+}
+
+main();
