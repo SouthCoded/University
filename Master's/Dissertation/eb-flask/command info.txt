@@ -1,0 +1,12 @@
+Activate Virtual Environment 
+----------------
+cd virt/Scripts/activate
+
+Run application
+-------------
+application.py
+
+S3 dissdatacontroller secret key
+-----------------------
+YpDYvd1otSoLq3kneEy71LLMmQ/uukGR5oEhJKL9
+

@@ -1,0 +1,59 @@
+<!doctype html>
+
+<head><title>Test</title> 
+    <meta charset=utf-8> </head>
+    <body>
+        <h1>Can I store your browser request?</h1>
+        <div>Insert more info about browser requests</div>
+	    <div id="example"></div>
+
+	    <script type="text/javascript">
+
+
+			function createHttpObject() {
+			     try {return new XMLHttpRequest();}
+			     catch (error) {}
+			     try {return new ActiveXObject("Msxml2.XMLHTTP");}
+			     catch (error) {}
+			     try {return new ActiveXObject("Microsoft.XMLHTTP");}
+			     catch (error) {}
+
+			     throw new Error("Could not create HTTP request object.");
+			}
+
+			function sendData(){
+
+
+				var filename = '{{ data }}';
+				var offset = new Date().getTimezoneOffset();
+
+				// var x=navigator.plugins.length; 
+				// var txt="Total plugin installed: "+x+"<br/>";
+				// txt+="Available plugins are->"+"<br/>";
+				// for(var i=0;i<x;i++)
+				// {
+				//   txt+=navigator.plugins[i].name + "<br/>"; 
+				// }
+
+				document.getElementById("example").innerHTML= "Please wait";
+
+				var request = new createHttpObject();
+				var url = "/send-data?" + "width=" + screen.width + "&height=" +screen.height + "&offset=" + offset + "&pixel=" + screen.pixelDepth + "&colordepth=" + screen.colorDepth + "&filename=" + filename;
+				request.open("GET", url, true);
+				request.send(null);
+
+
+				// Simulate an HTTP redirect:
+				setTimeout(function(){window.location.replace("https://study.cs.ucl.ac.uk/limesurvey/index.php/971554?unique=" + filename); },1000);
+
+				
+
+			}
+	    </script>
+
+        <button onclick="sendData()">Yes</a></button>
+
+
+
+
+    </body>

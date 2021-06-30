@@ -7,5 +7,9 @@
   - Distributed Systems and Security (COMP0133)
 
 - Term 2
-
+  - Computer Security II (COMP0055)
+  - Research in Information Security (COMP0057)
+  - Information Security Management (COMP0059)
+  - Cybercrime (SECU0043)
+  - Dissertation
 
