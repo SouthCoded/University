@@ -22,7 +22,7 @@ def send_data():
 	colorDepth = request.args.get('colorDepth')
 	filename = request.args.get('filename')
 
-	s3 = boto3.resource(service_name='s3',region_name='eu-west-2',aws_access_key_id='AKIA6NRK57R5DJV3CU6H',aws_secret_access_key='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')
+	s3 = boto3.resource(service_name='s3',region_name='eu-west-2',aws_access_key_id='',aws_secret_access_key='')
 	
 	temp = dict(request.headers)
 	request_format = json.dumps(temp)
