@@ -10,5 +10,6 @@ Term 2
 - Artificial Intelligence and Neural Computing
 - Dissertation*
 
-\* indicates compulsory modules
+
+\* indicates compulsory modules <br />
 \** indicates minor related modules
