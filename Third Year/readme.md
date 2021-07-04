@@ -1,8 +1,8 @@
 Term 1
 - Computability and Complexity*
-- Dissertation*
 - Networked Systems**
 - Networking Systems
+- Dissertation*
 
 Term 2
 - Internet of Things**
