@@ -17,5 +17,5 @@
   - Dissertation*
 
 
-* indicates compulsory modules
+\* indicates compulsory modules
 
