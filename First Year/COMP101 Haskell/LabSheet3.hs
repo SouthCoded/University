@@ -1,4 +1,4 @@
--- Duncan Rowe, LabSheet3
+-- LabSheet3
 
 mult :: [Int] -> Int
 mult (x:xs) = foldr (*) x xs
