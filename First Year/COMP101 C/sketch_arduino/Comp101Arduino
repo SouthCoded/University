@@ -1,5 +1,4 @@
 //Code for Comp101 Arduino Project
-//Duncan Rowe, 4/11/17
 
 #include <math.h>
 //Variables for calculating temperature, taken inspiration from http://www.circuitbasics.com/arduino-thermistor-temperature-sensor-tutorial/
